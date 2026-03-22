@@ -1,0 +1,850 @@
+% =============================================================
+% Practice Problems: Instrumental Variables Regression
+% Course: Quantitative Economics (PhD), Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{appendixnumberbeamer}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{hyperref}
+\usepackage{pifont}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+% SimplePlus theme
+\usetheme{SimplePlus}
+
+\title{Practice Problems: Instrumental Variables}
+\subtitle{Quantitative Economics}
+\author{Swapnil Singh}
+\institute{Lietuvos Bankas \and Kaunas University of Technology}
+\date{Vilnius University, 2026}
+
+\begin{document}
+
+% ---- TITLE SLIDE ----
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\scriptsize\color{gray} 20 problems from simple to tough. Solutions in the appendix.}
+\end{frame}
+
+% ---- TABLE OF CONTENTS ----
+\begin{frame}{Overview}
+\textbf{20 problems}, ordered by difficulty:
+\begin{itemize}
+  \item Problems 1--5: Definitions \& conceptual foundations
+  \item Problems 6--10: Bias formulas \& derivations
+  \item Problems 11--15: TSLS mechanics \& consistency
+  \item Problems 16--20: Advanced topics \& applications
+\end{itemize}
+
+\vspace{1em}
+Each problem slide has a \beamerbutton{Solution} button linking to the appendix.\\
+Each solution slide has a \beamerbutton{Back} button to return.
+\end{frame}
+
+% ============================================================
+%  QUESTIONS
+% ============================================================
+
+% ---- Q1 ----
+\begin{frame}{Problem 1: Three sources of endogeneity}
+\label{q1}
+List the three classical sources of endogeneity. For each, give a one-sentence explanation of \emph{why} it causes $\operatorname{cov}(X_i, u_i) \neq 0$.
+
+\vfill
+\hfill\hyperlink{s1}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q2 ----
+\begin{frame}{Problem 2: Instrument validity conditions}
+\label{q2}
+State the two conditions required for a variable $Z$ to be a valid instrument for the endogenous regressor $X$ in the model $Y_i = \beta_0 + \beta_1 X_i + u_i$.
+
+For each condition, explain in one sentence what goes wrong if it fails.
+
+\vfill
+\hfill\hyperlink{s2}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q3 ----
+\begin{frame}{Problem 3: Endogenous or exogenous?}
+\label{q3}
+For each scenario, state whether $X$ is endogenous or exogenous and identify which source of endogeneity (if any) applies:
+
+\begin{enumerate}[(a)]
+  \item Regressing wages on years of education, omitting innate ability.
+  \item Regressing crop yield on fertilizer use, where fertilizer is randomly assigned across plots.
+  \item Regressing quantity demanded on price in a competitive market.
+  \item Regressing test scores on hours studied, where hours studied is measured with error.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s3}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q4 ----
+\begin{frame}{Problem 4: Levels of exogeneity}
+\label{q4}
+State the three progressively stronger conditions for instrument exogeneity:
+\begin{enumerate}[(a)]
+  \item Zero correlation
+  \item Mean independence
+  \item Full independence
+\end{enumerate}
+
+\vspace{0.5em}
+Show that mean independence implies zero correlation. Then provide a counterexample demonstrating that the converse is false.
+
+\vfill
+\hfill\hyperlink{s4}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q5 ----
+\begin{frame}{Problem 5: Evaluating proposed instruments}
+\label{q5}
+A researcher wants to estimate the effect of class size on student test scores. She proposes the following instruments. For each, discuss whether relevance and exogeneity are likely satisfied:
+
+\begin{enumerate}[(a)]
+  \item School district budget per pupil.
+  \item Random fluctuations in cohort size due to birth-date variation.
+  \item Average temperature in the school district.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s5}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q6 ----
+\begin{frame}{Problem 6: Omitted variable bias formula}
+\label{q6}
+Suppose the true DGP is:
+\[
+Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_i + \varepsilon_i, \qquad E(\varepsilon_i \mid X_i, W_i) = 0
+\]
+but $W_i$ is unobserved. Define $u_i = \beta_2 W_i + \varepsilon_i$.
+
+\begin{enumerate}[(a)]
+  \item Derive $\operatorname{cov}(X_i, u_i)$ and state conditions under which it is nonzero.
+  \item Show that $\widehat{\beta}_1^{OLS} \xrightarrow{p} \beta_1 + \beta_2 \dfrac{\operatorname{cov}(X_i, W_i)}{\operatorname{var}(X_i)}$.
+  \item If $\beta_2 > 0$ and $\operatorname{cov}(X,W) > 0$, is the OLS estimate biased upward or downward?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s6}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q7 ----
+\begin{frame}{Problem 7: Attenuation bias}
+\label{q7}
+True model: $Y_i = \beta_0 + \beta_1 X_i^* + \varepsilon_i$ with $E(\varepsilon_i \mid X_i^*) = 0$.
+
+We observe $X_i = X_i^* + w_i$ (classical measurement error).
+
+\begin{enumerate}[(a)]
+  \item Substitute $X_i^* = X_i - w_i$ and derive the composite error $u_i$.
+  \item Show that $\operatorname{cov}(X_i, u_i) = -\beta_1 \sigma_w^2$.
+  \item Derive the probability limit of $\widehat{\beta}_1^{OLS}$ and explain why the bias is called ``attenuation bias.''
+  \item If the true $\beta_1 = 2$, $\sigma_{X^*}^2 = 4$, and $\sigma_w^2 = 1$, compute the plim of OLS.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s7}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q8 ----
+\begin{frame}{Problem 8: Simultaneous equations bias}
+\label{q8}
+Consider the supply--demand system:
+\begin{align*}
+\text{Demand}: \quad Q_i &= \alpha_0 + \alpha_1 P_i + u_i^d \qquad (\alpha_1 < 0) \\
+\text{Supply}: \quad Q_i &= \gamma_0 + \gamma_1 P_i + u_i^s \qquad (\gamma_1 > 0)
+\end{align*}
+Assume $u^d \perp u^s$, both mean-zero with variances $\sigma_d^2$ and $\sigma_s^2$.
+
+\begin{enumerate}[(a)]
+  \item Solve for the equilibrium price $P_i$.
+  \item Show that $\operatorname{cov}(P_i, u_i^d) = \dfrac{-\sigma_d^2}{\alpha_1 - \gamma_1}$ and explain its sign.
+  \item Derive: $\widehat{\alpha}_1^{OLS} \xrightarrow{p} \dfrac{\alpha_1 \sigma_s^2 + \gamma_1 \sigma_d^2}{\sigma_s^2 + \sigma_d^2}$.
+  \item Interpret this result: what does OLS estimate?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s8}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q9 ----
+\begin{frame}{Problem 9: Exogeneity failure and TSLS inconsistency}
+\label{q9}
+Suppose the instrument $Z$ is not perfectly exogenous: $\operatorname{cov}(Z_i, u_i) = \rho \neq 0$.
+
+\begin{enumerate}[(a)]
+  \item Show that $\widehat{\beta}_1^{TSLS} \xrightarrow{p} \beta_1 + \dfrac{\rho}{\operatorname{cov}(Z_i, X_i)}$.
+  \item If $\rho = 0.01$ and $\operatorname{cov}(Z_i, X_i) = 0.5$, what is the asymptotic bias?
+  \item Now suppose the instrument is weak: $\operatorname{cov}(Z_i, X_i) = 0.02$. Recompute the asymptotic bias. What do you observe?
+  \item Explain in words why weak instruments \emph{amplify} violations of exogeneity.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s9}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q10 ----
+\begin{frame}{Problem 10: Direction of OVB with IV}
+\label{q10}
+Return to the OVB setup. The true DGP is $Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_i + \varepsilon_i$.
+
+An instrument $Z$ satisfies $\operatorname{cov}(Z,X) \neq 0$ and $\operatorname{cov}(Z, \varepsilon) = 0$.
+
+\begin{enumerate}[(a)]
+  \item Write the exogeneity condition $\operatorname{cov}(Z_i, u_i) = 0$ in terms of $\beta_2$ and $\operatorname{cov}(Z_i, W_i)$.
+  \item Why does this mean the instrument must be uncorrelated with the omitted variable $W$?
+  \item A researcher proposes parental income as an instrument for education in a wage regression (omitting ability). Is this a good instrument? Why or why not?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s10}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q11 ----
+\begin{frame}{Problem 11: The TSLS formula}
+\label{q11}
+In the simple model $Y_i = \beta_0 + \beta_1 X_i + u_i$ with one instrument $Z$:
+
+\begin{enumerate}[(a)]
+  \item The TSLS estimator is the OLS estimator of $Y$ on $\widehat{X}$, where $\widehat{X}_i = \widehat{\pi}_0 + \widehat{\pi}_1 Z_i$. Starting from $\widehat{\beta}_1^{TSLS} = \dfrac{s_{\widehat{X}Y}}{s_{\widehat{X}}^2}$, show that $\widehat{\beta}_1^{TSLS} = \dfrac{s_{ZY}}{s_{ZX}}$.
+
+  \item Explain why this is called the ``Wald estimator'' and interpret it as a ratio of a reduced-form effect to a first-stage effect.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s11}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q12 ----
+\begin{frame}{Problem 12: Consistency of TSLS}
+\label{q12}
+Starting from $Y_i = \beta_0 + \beta_1 X_i + u_i$:
+
+\begin{enumerate}[(a)]
+  \item Take population covariances of both sides with $Z_i$ and solve for $\beta_1$ under the IV assumptions.
+  \item Use the law of large numbers and continuous mapping theorem to show that $\widehat{\beta}_1^{TSLS} = s_{ZY}/s_{ZX} \xrightarrow{p} \beta_1$.
+  \item At which step does instrument relevance play a role? At which step does instrument exogeneity play a role?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s12}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q13 ----
+\begin{frame}{Problem 13: First-stage $F$-statistic}
+\label{q13}
+A researcher estimates a first-stage regression and obtains a first-stage $F$-statistic of 7.2.
+
+\begin{enumerate}[(a)]
+  \item Is the instrument weak according to the rule of thumb?
+  \item Using the approximate bias formula $E(\widehat{\beta}_1^{TSLS}) - \beta_1 \approx \dfrac{\beta_1^{OLS} - \beta_1}{E(F) - 1}$, what fraction of the OLS bias does the TSLS estimate retain?
+  \item List three strategies the researcher could pursue.
+  \item Why are standard TSLS confidence intervals unreliable with weak instruments?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s13}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q14 ----
+\begin{frame}{Problem 14: Identification and the order condition}
+\label{q14}
+Consider the general IV model:
+\[
+Y_i = \beta_0 + \beta_1 X_{1i} + \beta_2 X_{2i} + \beta_3 W_{1i} + u_i
+\]
+where $X_1, X_2$ are endogenous and $W_1$ is exogenous.
+
+\begin{enumerate}[(a)]
+  \item How many instruments are needed at minimum?
+  \item A researcher proposes three instruments $Z_1, Z_2, Z_3$. Is the model exactly identified, overidentified, or underidentified?
+  \item Describe what the first-stage regressions look like. How many are there?
+  \item Can the researcher test instrument exogeneity? If so, what is the degrees of freedom of the $J$-test?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s14}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q15 ----
+\begin{frame}{Problem 15: The $J$-test}
+\label{q15}
+A researcher estimates a model with $k=1$ endogenous regressor and $m=3$ instruments. After estimating by TSLS:
+
+\begin{enumerate}[(a)]
+  \item Describe the steps to compute the $J$-statistic.
+  \item Under $H_0$, what is the distribution of the $J$-statistic? State the degrees of freedom.
+  \item The researcher obtains $J = 7.8$. At the 5\% significance level, does she reject? (Use $\chi^2_2(0.05) = 5.99$.)
+  \item The $J$-test rejects. Does this mean \emph{all} instruments are endogenous? Explain.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s15}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q16 ----
+\begin{frame}{Problem 16: Sampling distribution of TSLS}
+\label{q16}
+From the representation $\widehat{\beta}_1^{TSLS} = \beta_1 + \dfrac{\frac{1}{n}\sum(Z_i - \bar{Z})u_i}{\frac{1}{n}\sum(Z_i - \bar{Z})(X_i - \bar{X})}$:
+
+\begin{enumerate}[(a)]
+  \item Define $\bar{q} = \frac{1}{n}\sum(Z_i - \bar{Z})u_i$. Show that $E(\bar{q}) = 0$ under instrument exogeneity and state which theorem implies $\sqrt{n}\bar{q} \xrightarrow{d} N(0, \sigma_q^2)$.
+  \item The denominator converges to $\operatorname{cov}(Z,X)$ in probability. Which theorem combines numerator and denominator to yield asymptotic normality of $\widehat{\beta}_1^{TSLS}$?
+  \item Write down the asymptotic variance $\sigma_{\widehat{\beta}_1^{TSLS}}^2$ and explain why it is larger when $\operatorname{cov}(Z,X)$ is small.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s16}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q17 ----
+\begin{frame}{Problem 17: Cigarette demand application}
+\label{q17}
+Using panel data (10-year differences), a researcher estimates:
+\[
+\Delta\ln Q_i = \beta_0 + \beta_1 \Delta\ln P_i + \beta_2 \Delta\ln\text{Inc}_i + u_i
+\]
+with instruments $\Delta\text{SalesTax}$ and $\Delta\text{CigTax}$.
+
+Results: $\widehat{\beta}_1^{(1)} = -0.94$ (SalesTax only), $\widehat{\beta}_1^{(2)} = -1.34$ (CigTax only), $\widehat{\beta}_1^{(3)} = -1.20$ (both). The $J$-test $p$-value with both instruments is 0.026.
+
+\begin{enumerate}[(a)]
+  \item First-stage $F$-statistics are 33.7, 107.2, and 88.6. Are instruments weak?
+  \item Interpret the $J$-test result. What does rejection imply?
+  \item Which instrument would you prefer and why? What is the economic argument?
+  \item Interpret the preferred elasticity estimate in terms of policy.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s17}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q18 ----
+\begin{frame}{Problem 18: Anderson--Rubin test}
+\label{q18}
+The Anderson--Rubin (AR) test of $H_0: \beta_1 = \beta_{1,0}$ works by:
+\begin{enumerate}
+  \item Constructing $Y_i^* = Y_i - \beta_{1,0}X_i$
+  \item Regressing $Y_i^*$ on $Z$'s and $W$'s
+  \item Testing whether all coefficients on $Z$'s are jointly zero
+\end{enumerate}
+
+\begin{enumerate}[(a)]
+  \item Explain intuitively why, if $\beta_1 = \beta_{1,0}$ and the instruments are exogenous, the $Z$'s should have no predictive power for $Y_i^*$.
+  \item Why is this test valid even when instruments are weak?
+  \item Describe how to construct a confidence set by inverting the AR test.
+  \item What unusual features can AR confidence sets have?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s18}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q19 ----
+\begin{frame}{Problem 19: IV with simultaneous causality -- full derivation}
+\label{q19}
+In the supply--demand system with a supply shifter $Z$:
+\begin{align*}
+\text{Demand}: & \quad Q_i = \alpha_0 + \alpha_1 P_i + u_i^d \\
+\text{Supply}: & \quad Q_i = \gamma_0 + \gamma_1 P_i + \delta Z_i + u_i^s
+\end{align*}
+Assume $\operatorname{cov}(Z_i, u_i^d) = 0$, $\operatorname{cov}(Z_i, u_i^s) = 0$, and $\delta \neq 0$.
+
+\begin{enumerate}[(a)]
+  \item Solve for the equilibrium price $P_i$ in terms of $Z_i$ and the shocks.
+  \item Verify that $\operatorname{cov}(Z_i, P_i) \neq 0$ (relevance).
+  \item Verify that $\operatorname{cov}(Z_i, u_i^d) = 0$ (exogeneity for the demand equation).
+  \item Compute $\operatorname{cov}(Z_i, Q_i)$ using the demand equation and show that $\dfrac{\operatorname{cov}(Z_i, Q_i)}{\operatorname{cov}(Z_i, P_i)} = \alpha_1$, confirming TSLS identifies the demand slope.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s19}{\beamerbutton{Solution}}
+\end{frame}
+
+% ---- Q20 ----
+\begin{frame}{Problem 20: Comprehensive analysis}
+\label{q20}
+A health economist estimates the effect of hospital spending ($X$) on patient survival ($Y$). She suspects spending is endogenous because sicker patients receive more spending.
+
+She proposes two instruments: (i) distance to nearest teaching hospital ($Z_1$), (ii) local property tax revenue ($Z_2$). Her results:
+\begin{itemize}
+  \item OLS: $\widehat{\beta}_1^{OLS} = -0.05$ (SE $= 0.01$)
+  \item TSLS (both IVs): $\widehat{\beta}_1^{TSLS} = 0.12$ (SE $= 0.04$)
+  \item First-stage $F = 14.3$
+  \item $J$-statistic $= 0.45$, $p$-value $= 0.50$
+\end{itemize}
+
+\begin{enumerate}[(a)]
+  \item Why is OLS likely biased? In which direction?
+  \item Assess instrument strength. Are the instruments weak?
+  \item Interpret the $J$-test. Does it validate both instruments?
+  \item Discuss the exogeneity of each instrument. Which is more credible?
+  \item Reconcile the OLS and TSLS estimates economically.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s20}{\beamerbutton{Solution}}
+\end{frame}
+
+% ============================================================
+%  APPENDIX: SOLUTIONS
+% ============================================================
+\appendix
+
+\begin{frame}[plain]
+  \centering
+  \vfill
+  {\Huge\bfseries Solutions}
+  \vfill
+\end{frame}
+
+% ---- S1 ----
+\begin{frame}{Solution 1: Three sources of endogeneity}
+\label{s1}
+\begin{enumerate}
+  \item \textbf{Omitted Variable Bias}: An unobserved variable $W$ in the error $u$ is correlated with $X$, so $\operatorname{cov}(X, u) = \beta_2\operatorname{cov}(X, W) \neq 0$.
+
+  \item \textbf{Measurement Error}: The observed $X = X^* + w$ contains noise $w$ that mechanically enters both $X$ and $u = \varepsilon - \beta_1 w$, creating $\operatorname{cov}(X, u) = -\beta_1\sigma_w^2 \neq 0$.
+
+  \item \textbf{Simultaneous Causality}: $X$ and $Y$ are jointly determined in equilibrium, so the structural error $u$ feeds back into $X$ through the equilibrium mapping.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q1}{\beamerbutton{Back to Problem 1}}
+\end{frame}
+
+% ---- S2 ----
+\begin{frame}{Solution 2: Instrument validity conditions}
+\label{s2}
+\begin{block}{Condition 1: Instrument Relevance}
+$\operatorname{corr}(Z_i, X_i) \neq 0$. \quad $Z$ must be correlated with $X$.
+
+\emph{If it fails}: $Z$ carries no information about $X$. The denominator $\operatorname{cov}(Z,X) \to 0$, making the TSLS estimator undefined (ratio of two normals, not consistent).
+\end{block}
+
+\begin{block}{Condition 2: Instrument Exogeneity}
+$\operatorname{corr}(Z_i, u_i) = 0$. \quad $Z$ must be uncorrelated with the error.
+
+\emph{If it fails}: TSLS converges to $\beta_1 + \operatorname{cov}(Z,u)/\operatorname{cov}(Z,X) \neq \beta_1$. The estimator is inconsistent --- it ``locks onto'' contaminated variation.
+\end{block}
+
+\vfill
+\hfill\hyperlink{q2}{\beamerbutton{Back to Problem 2}}
+\end{frame}
+
+% ---- S3 ----
+\begin{frame}{Solution 3: Endogenous or exogenous?}
+\label{s3}
+\begin{enumerate}[(a)]
+  \item \textbf{Endogenous} --- \emph{Omitted variable bias}. Ability is in $u$, and $\operatorname{cov}(\text{education}, \text{ability}) > 0$.
+
+  \item \textbf{Exogenous}. Random assignment ensures $\operatorname{cov}(X, u) = 0$. OLS is consistent.
+
+  \item \textbf{Endogenous} --- \emph{Simultaneous causality}. Price and quantity are jointly determined by supply and demand; OLS on either equation is inconsistent.
+
+  \item \textbf{Endogenous} --- \emph{Measurement error}. Observed $X = X^* + w$, and the noise $w$ enters both $X$ and the composite error, creating $\operatorname{cov}(X, u) = -\beta_1\sigma_w^2 \neq 0$.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q3}{\beamerbutton{Back to Problem 3}}
+\end{frame}
+
+% ---- S4 ----
+\begin{frame}{Solution 4: Levels of exogeneity}
+\label{s4}
+\textbf{Three levels}: (a) $\operatorname{cov}(Z,u)=0$; \quad (b) $E(u\mid Z)=0$; \quad (c) $u \perp\!\!\!\perp Z$.
+
+\textbf{Proof that (b) $\Rightarrow$ (a)}:
+\begin{align*}
+E(Zu) &= E[E(Zu \mid Z)] = E[Z \cdot \underbrace{E(u \mid Z)}_{=0}] = 0 \\
+E(u) &= E[\underbrace{E(u \mid Z)}_{=0}] = 0
+\end{align*}
+So $\operatorname{cov}(Z,u) = E(Zu) - E(Z)E(u) = 0$.
+
+\textbf{Counterexample (converse fails)}: Let $Z \sim N(0,1)$, $u = Z^2 - 1$.
+\begin{itemize}
+  \item $E(u) = 0$, $\operatorname{cov}(Z,u) = E(Z^3) = 0$. \checkmark
+  \item But $E(u \mid Z = z) = z^2 - 1 \neq 0$ for $z \neq \pm 1$. \ding{55}
+\end{itemize}
+
+\vfill
+\hfill\hyperlink{q4}{\beamerbutton{Back to Problem 4}}
+\end{frame}
+
+% ---- S5 ----
+\begin{frame}{Solution 5: Evaluating proposed instruments}
+\label{s5}
+\begin{enumerate}[(a)]
+  \item \textbf{Budget per pupil}: \emph{Relevant} (more funding $\to$ smaller classes), but likely \emph{not exogenous} --- budget correlates with district wealth, parental involvement, and school quality, all of which affect test scores directly.
+
+  \item \textbf{Random birth-date fluctuations} (Hoxby, 2000): \emph{Relevant} (more students $\to$ larger classes) and plausibly \emph{exogenous} --- biological variation in birth dates is unrelated to school quality or family background. \alert{Good instrument.}
+
+  \item \textbf{Average temperature}: Likely \emph{irrelevant} (no clear mechanism linking temperature to class size). Even if correlated, the link is too weak. Not a useful instrument.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q5}{\beamerbutton{Back to Problem 5}}
+\end{frame}
+
+% ---- S6 ----
+\begin{frame}{Solution 6: Omitted variable bias formula}
+\label{s6}
+\begin{enumerate}[(a)]
+  \item $\operatorname{cov}(X, u) = \operatorname{cov}(X, \beta_2 W + \varepsilon) = \beta_2\operatorname{cov}(X,W) + \underbrace{\operatorname{cov}(X,\varepsilon)}_{=0} = \beta_2\operatorname{cov}(X,W)$.
+
+  Nonzero iff $\beta_2 \neq 0$ \emph{and} $\operatorname{cov}(X,W) \neq 0$.
+
+  \item $\widehat{\beta}_1^{OLS} \xrightarrow{p} \beta_1 + \dfrac{\operatorname{cov}(X,u)}{\operatorname{var}(X)} = \beta_1 + \beta_2\dfrac{\operatorname{cov}(X,W)}{\operatorname{var}(X)}$. \checkmark
+
+  \item $\beta_2 > 0$ and $\operatorname{cov}(X,W) > 0$ $\Rightarrow$ bias $= \beta_2\dfrac{\operatorname{cov}(X,W)}{\operatorname{var}(X)} > 0$.
+
+  OLS is \alert{biased upward} --- it overestimates $\beta_1$.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q6}{\beamerbutton{Back to Problem 6}}
+\end{frame}
+
+% ---- S7 ----
+\begin{frame}{Solution 7: Attenuation bias}
+\label{s7}
+\begin{enumerate}[(a)]
+  \item $Y_i = \beta_0 + \beta_1(X_i - w_i) + \varepsilon_i = \beta_0 + \beta_1 X_i + \underbrace{(\varepsilon_i - \beta_1 w_i)}_{u_i}$.
+
+  \item $\operatorname{cov}(X, u) = \operatorname{cov}(X^* + w,\; \varepsilon - \beta_1 w) = -\beta_1\sigma_w^2$.
+
+  \item $\widehat{\beta}_1^{OLS} \xrightarrow{p} \beta_1 + \dfrac{-\beta_1\sigma_w^2}{\sigma_{X^*}^2 + \sigma_w^2} = \beta_1\underbrace{\left(\dfrac{\sigma_{X^*}^2}{\sigma_{X^*}^2 + \sigma_w^2}\right)}_{< 1}$.
+
+  The coefficient is ``shrunk'' toward zero --- \alert{attenuation bias}. More noise ($\sigma_w^2 \uparrow$) $\Rightarrow$ more attenuation.
+
+  \item $\text{plim} = 2 \times \dfrac{4}{4+1} = 2 \times \dfrac{4}{5} = \boxed{1.6}$. OLS underestimates by 20\%.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q7}{\beamerbutton{Back to Problem 7}}
+\end{frame}
+
+% ---- S8 ----
+\begin{frame}{Solution 8: Simultaneous equations bias (1/2)}
+\label{s8}
+\begin{enumerate}[(a)]
+  \item Set demand $=$ supply: $\alpha_0 + \alpha_1 P + u^d = \gamma_0 + \gamma_1 P + u^s$.
+
+  Solve: $P_i = \dfrac{(\gamma_0 - \alpha_0) + (u_i^s - u_i^d)}{\alpha_1 - \gamma_1}$.
+
+  \item $\operatorname{cov}(P, u^d) = \dfrac{1}{\alpha_1 - \gamma_1}[\operatorname{cov}(u^s, u^d) - \operatorname{var}(u^d)] = \dfrac{-\sigma_d^2}{\alpha_1 - \gamma_1}$.
+
+  Since $\alpha_1 < 0 < \gamma_1$: $\alpha_1 - \gamma_1 < 0$, so $\operatorname{cov}(P, u^d) > 0$.
+
+  \emph{Intuition}: A positive demand shock raises the equilibrium price.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s8b}{\beamerbutton{Continued}}
+\hfill\hyperlink{q8}{\beamerbutton{Back to Problem 8}}
+\end{frame}
+
+\begin{frame}{Solution 8: Simultaneous equations bias (2/2)}
+\label{s8b}
+\begin{enumerate}[(a)]
+  \setcounter{enumi}{2}
+  \item $\operatorname{var}(P) = \dfrac{\sigma_s^2 + \sigma_d^2}{(\alpha_1 - \gamma_1)^2}$.
+
+  \[
+  \widehat{\alpha}_1^{OLS} \xrightarrow{p} \alpha_1 + \frac{\operatorname{cov}(P,u^d)}{\operatorname{var}(P)} = \alpha_1 + \frac{-\sigma_d^2(\alpha_1 - \gamma_1)}{(\sigma_s^2+\sigma_d^2)} = \frac{\alpha_1\sigma_s^2 + \gamma_1\sigma_d^2}{\sigma_s^2 + \sigma_d^2}
+  \]
+
+  \item This is a \alert{variance-weighted average} of the demand slope $\alpha_1$ and the supply slope $\gamma_1$. OLS estimates \emph{neither} the demand nor the supply curve --- it produces a meaningless hybrid. Only when $\sigma_d^2 = 0$ (no demand shocks) does OLS recover $\alpha_1$.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q8}{\beamerbutton{Back to Problem 8}}
+\end{frame}
+
+% ---- S9 ----
+\begin{frame}{Solution 9: Exogeneity failure and TSLS inconsistency}
+\label{s9}
+\begin{enumerate}[(a)]
+  \item From $\operatorname{cov}(Z, Y) = \beta_1\operatorname{cov}(Z,X) + \operatorname{cov}(Z,u)$:
+  \[
+  \frac{\operatorname{cov}(Z,Y)}{\operatorname{cov}(Z,X)} = \beta_1 + \frac{\rho}{\operatorname{cov}(Z,X)}
+  \]
+  Since $s_{ZY}/s_{ZX} \xrightarrow{p}$ this ratio: $\widehat{\beta}_1^{TSLS} \xrightarrow{p} \beta_1 + \dfrac{\rho}{\operatorname{cov}(Z,X)}$. \checkmark
+
+  \item Bias $= 0.01/0.5 = \boxed{0.02}$. Small.
+
+  \item Bias $= 0.01/0.02 = \boxed{0.50}$. Twenty-five times larger!
+
+  \item The asymptotic bias is $\rho/\operatorname{cov}(Z,X)$. When the instrument is weak ($\operatorname{cov}(Z,X) \approx 0$), the denominator shrinks, \alert{amplifying} even tiny exogeneity violations into large biases.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q9}{\beamerbutton{Back to Problem 9}}
+\end{frame}
+
+% ---- S10 ----
+\begin{frame}{Solution 10: Direction of OVB with IV}
+\label{s10}
+\begin{enumerate}[(a)]
+  \item $\operatorname{cov}(Z, u) = \beta_2\operatorname{cov}(Z, W) + \operatorname{cov}(Z, \varepsilon) = 0$. Since $\operatorname{cov}(Z,\varepsilon) = 0$ by assumption, we need $\beta_2\operatorname{cov}(Z, W) = 0$.
+
+  \item Since $\beta_2 \neq 0$ (otherwise there is no OVB), we must have $\operatorname{cov}(Z, W) = 0$. The instrument must be \alert{uncorrelated with the omitted variable}.
+
+  \item \textbf{Parental income is a bad instrument.} It is correlated with ability ($W$): children from wealthier families tend to have advantages (better nutrition, tutoring, etc.)\ that correlate with ability. So $\operatorname{cov}(Z, W) \neq 0$, violating exogeneity. A better instrument: quarter of birth (Angrist \& Krueger, 1991).
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q10}{\beamerbutton{Back to Problem 10}}
+\end{frame}
+
+% ---- S11 ----
+\begin{frame}{Solution 11: The TSLS formula}
+\label{s11}
+\begin{enumerate}[(a)]
+  \item Since $\widehat{X}_i = \widehat{\pi}_0 + \widehat{\pi}_1 Z_i$, deviations are $\widehat{X}_i - \bar{\widehat{X}} = \widehat{\pi}_1(Z_i - \bar{Z})$. Substitute:
+  \begin{align*}
+  s_{\widehat{X}Y} &= \frac{1}{n-1}\sum \widehat{\pi}_1(Z_i - \bar{Z})(Y_i - \bar{Y}) = \widehat{\pi}_1 \, s_{ZY} \\
+  s_{\widehat{X}}^2 &= \frac{1}{n-1}\sum \widehat{\pi}_1^2(Z_i - \bar{Z})^2 = \widehat{\pi}_1^2 \, s_Z^2
+  \end{align*}
+  $\widehat{\beta}_1^{TSLS} = \dfrac{\widehat{\pi}_1 s_{ZY}}{\widehat{\pi}_1^2 s_Z^2} = \dfrac{s_{ZY}}{\widehat{\pi}_1 s_Z^2} = \dfrac{s_{ZY}}{s_{ZX}}$, \quad since $\widehat{\pi}_1 = s_{ZX}/s_Z^2$. \checkmark
+
+  \item \textbf{Wald estimator}: $s_{ZY}$ is the \emph{reduced-form} effect ($Z \to Y$) and $s_{ZX}$ is the \emph{first-stage} effect ($Z \to X$). The ratio recovers the structural effect $X \to Y$: ``how much $Y$ moves per unit of $X$ movement caused by $Z$.''
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q11}{\beamerbutton{Back to Problem 11}}
+\end{frame}
+
+% ---- S12 ----
+\begin{frame}{Solution 12: Consistency of TSLS}
+\label{s12}
+\begin{enumerate}[(a)]
+  \item $\operatorname{cov}(Z, Y) = \operatorname{cov}(Z, \beta_0 + \beta_1 X + u) = \beta_1\operatorname{cov}(Z,X) + \underbrace{\operatorname{cov}(Z,u)}_{=0 \text{ (exogeneity)}}$.
+
+  Solve: $\beta_1 = \dfrac{\operatorname{cov}(Z,Y)}{\operatorname{cov}(Z,X)}$ \quad (requires $\operatorname{cov}(Z,X) \neq 0$: \alert{relevance}).
+
+  \item By LLN: $s_{ZY} \xrightarrow{p} \operatorname{cov}(Z,Y)$, $s_{ZX} \xrightarrow{p} \operatorname{cov}(Z,X)$.
+
+  By continuous mapping theorem (Slutsky): $\dfrac{s_{ZY}}{s_{ZX}} \xrightarrow{p} \dfrac{\operatorname{cov}(Z,Y)}{\operatorname{cov}(Z,X)} = \beta_1$. \checkmark
+
+  \item \textbf{Exogeneity}: used in (a) to set $\operatorname{cov}(Z,u) = 0$, allowing isolation of $\beta_1$.
+
+  \textbf{Relevance}: used in (a) to divide by $\operatorname{cov}(Z,X) \neq 0$, and in (b) to apply Slutsky (denominator converges to a nonzero constant, not zero).
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q12}{\beamerbutton{Back to Problem 12}}
+\end{frame}
+
+% ---- S13 ----
+\begin{frame}{Solution 13: First-stage $F$-statistic}
+\label{s13}
+\begin{enumerate}[(a)]
+  \item Yes, $F = 7.2 < 10$. The instrument is \alert{weak} by the Stock--Yogo rule of thumb.
+
+  \item Fraction of OLS bias $\approx \dfrac{1}{E(F) - 1} = \dfrac{1}{7.2 - 1} = \dfrac{1}{6.2} \approx \boxed{16.1\%}$. TSLS retains about 16\% of the OLS bias --- substantial.
+
+  \item Three strategies:
+  \begin{itemize}
+    \item Find stronger instruments (requires domain knowledge).
+    \item If overidentified, discard the weakest instruments.
+    \item Use weak-instrument-robust inference: Anderson--Rubin or CLR tests/confidence sets.
+  \end{itemize}
+
+  \item With weak instruments, the TSLS distribution is \alert{not well-approximated by the normal}. It is heavy-tailed and centered closer to the OLS plim, so standard $t$-tests and CIs have incorrect size (true coverage $\ll$ nominal 95\%).
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q13}{\beamerbutton{Back to Problem 13}}
+\end{frame}
+
+% ---- S14 ----
+\begin{frame}{Solution 14: Identification and the order condition}
+\label{s14}
+\begin{enumerate}[(a)]
+  \item $k = 2$ endogenous regressors $\Rightarrow$ need $m \geq 2$ instruments. \textbf{Minimum: 2 instruments.}
+
+  \item $m = 3 > k = 2$: the model is \alert{overidentified} (one extra instrument).
+
+  \item Two first-stage regressions (one per endogenous variable):
+  \begin{align*}
+  X_{1i} &= \pi_0 + \pi_1 Z_{1i} + \pi_2 Z_{2i} + \pi_3 Z_{3i} + \pi_4 W_{1i} + v_{1i} \\
+  X_{2i} &= \delta_0 + \delta_1 Z_{1i} + \delta_2 Z_{2i} + \delta_3 Z_{3i} + \delta_4 W_{1i} + v_{2i}
+  \end{align*}
+  Each includes \alert{all} instruments and \alert{all} exogenous regressors.
+
+  \item Yes, because $m > k$. The $J$-test has $m - k = 3 - 2 = \boxed{1}$ degree of freedom. Under $H_0$: $J \sim \chi^2_1$.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q14}{\beamerbutton{Back to Problem 14}}
+\end{frame}
+
+% ---- S15 ----
+\begin{frame}{Solution 15: The $J$-test}
+\label{s15}
+\begin{enumerate}[(a)]
+  \item Steps:
+  \begin{enumerate}[1.]
+    \item Estimate the model by TSLS; obtain residuals $\widehat{u}_i^{TSLS}$.
+    \item Regress $\widehat{u}_i^{TSLS}$ on all $Z$'s and $W$'s. Compute the $F$-statistic testing all $Z$-coefficients $= 0$.
+    \item $J = m \times F$.
+  \end{enumerate}
+
+  \item $J \sim \chi^2_{m-k} = \chi^2_{3-1} = \chi^2_2$.
+
+  \item $J = 7.8 > 5.99 = \chi^2_2(0.05)$. \alert{Reject $H_0$} at the 5\% level.
+
+  \item No. The $J$-test rejects the hypothesis that \emph{all} instruments are exogenous, but it could be that only \emph{one} is endogenous. It does not identify \emph{which} instrument(s) are problematic. Moreover, the test is conditional on at least $k$ instruments being valid --- it can never confirm the baseline identifying assumption.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q15}{\beamerbutton{Back to Problem 15}}
+\end{frame}
+
+% ---- S16 ----
+\begin{frame}{Solution 16: Sampling distribution of TSLS}
+\label{s16}
+\begin{enumerate}[(a)]
+  \item $E(\bar{q}) \approx E\!\left[\frac{1}{n}\sum(Z_i - \mu_Z)u_i\right] = E[(Z_i - \mu_Z)u_i] = \operatorname{cov}(Z,u) = 0$ under exogeneity.
+
+  Since $q_i = (Z_i - \mu_Z)u_i$ are i.i.d.\ with $E(q_i) = 0$ and $\operatorname{var}(q_i) = \sigma_q^2 < \infty$, the \alert{Central Limit Theorem} gives $\sqrt{n}\,\bar{q} \xrightarrow{d} N(0, \sigma_q^2)$.
+
+  \item \textbf{Slutsky's theorem}: since the denominator $\xrightarrow{p} \operatorname{cov}(Z,X) \neq 0$ (a constant), the ratio of an asymptotically normal numerator and a probability limit in the denominator is asymptotically normal.
+
+  \item $\sigma_{\widehat{\beta}_1^{TSLS}}^2 = \dfrac{1}{n} \cdot \dfrac{\operatorname{var}[(Z_i - \mu_Z)u_i]}{[\operatorname{cov}(Z,X)]^2}$.
+
+  When $\operatorname{cov}(Z,X)$ is small, the denominator shrinks, inflating the variance. Weak instruments $\Rightarrow$ \alert{imprecise} estimates.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q16}{\beamerbutton{Back to Problem 16}}
+\end{frame}
+
+% ---- S17 ----
+\begin{frame}{Solution 17: Cigarette demand application}
+\label{s17}
+\begin{enumerate}[(a)]
+  \item All $F$-statistics $\gg 10$ (33.7, 107.2, 88.6). Instruments are \alert{not weak}.
+
+  \item $J$-test $p = 0.026 < 0.05$: reject $H_0$ that both instruments are exogenous. At least one instrument is likely endogenous.
+
+  \item \textbf{Prefer SalesTax} ($\widehat{\beta}_1 = -0.94$). General sales tax is set for broad public finance reasons, unrelated to the cigarette market. Cigarette-specific tax may be influenced by tobacco industry lobbying and is thus more likely correlated with demand-side factors.
+
+  \item A 1\% price increase reduces cigarette consumption by about 0.94\% in the long run. Demand is approximately unit-elastic at the 10-year horizon. To reduce consumption by 20\%, prices need to rise by $\approx 20/0.94 \approx 21\%$.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q17}{\beamerbutton{Back to Problem 17}}
+\end{frame}
+
+% ---- S18 ----
+\begin{frame}{Solution 18: Anderson--Rubin test}
+\label{s18}
+\begin{enumerate}[(a)]
+  \item If $\beta_1 = \beta_{1,0}$, then $Y_i^* = Y_i - \beta_{1,0}X_i = \beta_0 + u_i + \beta_2 W_{1i} + \cdots$ Under exogeneity, $\operatorname{cov}(Z, u) = 0$. So $Z$ has no predictive power for $Y^*$ beyond $W$'s --- the $F$-statistic should be small.
+
+  \item Standard TSLS inference relies on the denominator converging to a nonzero constant (Slutsky). With weak instruments, this fails. The AR test uses the $F$-distribution of a regression, which is valid \alert{regardless} of instrument strength --- it never divides by $\operatorname{cov}(Z,X)$.
+
+  \item For each candidate $\beta_{1,0}$, run the AR test. The 95\% confidence set is $\{\beta_{1,0} : \text{AR test does not reject at 5\%}\}$.
+
+  \item AR confidence sets can be: \emph{empty} (no $\beta_{1,0}$ is consistent with the data), \emph{unbounded} (instruments are too weak to pin down $\beta_1$), or \emph{disconnected} (two disjoint intervals).
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q18}{\beamerbutton{Back to Problem 18}}
+\end{frame}
+
+% ---- S19 ----
+\begin{frame}{Solution 19: IV with simultaneous causality (1/2)}
+\label{s19}
+\begin{enumerate}[(a)]
+  \item Set demand $=$ supply:
+  \[
+  \alpha_0 + \alpha_1 P + u^d = \gamma_0 + \gamma_1 P + \delta Z + u^s
+  \]
+  Solve: $\boxed{P_i = \dfrac{(\gamma_0 - \alpha_0) + \delta Z_i + (u_i^s - u_i^d)}{\alpha_1 - \gamma_1}}$.
+
+  \item $\operatorname{cov}(Z, P) = \dfrac{\delta\operatorname{var}(Z) + \operatorname{cov}(Z, u^s) - \operatorname{cov}(Z, u^d)}{\alpha_1 - \gamma_1} = \dfrac{\delta\operatorname{var}(Z)}{\alpha_1 - \gamma_1} \neq 0$
+
+  since $\delta \neq 0$ and $\operatorname{var}(Z) > 0$. \alert{Relevance holds.} \checkmark
+
+  \item $\operatorname{cov}(Z, u^d) = 0$ by assumption. \alert{Exogeneity holds.} \checkmark
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s19b}{\beamerbutton{Continued}}
+\hfill\hyperlink{q19}{\beamerbutton{Back to Problem 19}}
+\end{frame}
+
+\begin{frame}{Solution 19: IV with simultaneous causality (2/2)}
+\label{s19b}
+\begin{enumerate}[(a)]
+  \setcounter{enumi}{3}
+  \item From the demand equation: $Q_i = \alpha_0 + \alpha_1 P_i + u_i^d$.
+
+  Take covariances with $Z$:
+  \[
+  \operatorname{cov}(Z, Q) = \alpha_1\operatorname{cov}(Z, P) + \underbrace{\operatorname{cov}(Z, u^d)}_{=0}
+  \]
+
+  Therefore:
+  \[
+  \frac{\operatorname{cov}(Z, Q)}{\operatorname{cov}(Z, P)} = \alpha_1 \qquad \checkmark
+  \]
+
+  TSLS consistently estimates the demand slope $\alpha_1$ by using only the supply-driven variation in prices (caused by $Z$). The demand shocks $u^d$ are ``projected out.''
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q19}{\beamerbutton{Back to Problem 19}}
+\end{frame}
+
+% ---- S20 ----
+\begin{frame}{Solution 20: Comprehensive analysis (1/2)}
+\label{s20}
+\begin{enumerate}[(a)]
+  \item OLS is biased \alert{downward}. Sicker patients receive more spending ($\operatorname{cov}(X, u) < 0$ because sicker patients have worse outcomes, i.e., $u$ captures unobserved health). This is a combination of OVB (unobserved severity) and simultaneous causality (spending responds to health status). OLS shows spending \emph{hurts} ($-0.05$), but this reflects selection, not causation.
+
+  \item $F = 14.3 > 10$. Instruments pass the weak-instrument test. TSLS standard inference is reliable.
+
+  \item $J = 0.45$, $p = 0.50$: \alert{do not reject} $H_0$ that both instruments are exogenous. This is \emph{consistent with} validity but does not \emph{prove} it --- the $J$-test can only detect inconsistencies between instruments, not absolute violations.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s20b}{\beamerbutton{Continued}}
+\hfill\hyperlink{q20}{\beamerbutton{Back to Problem 20}}
+\end{frame}
+
+\begin{frame}{Solution 20: Comprehensive analysis (2/2)}
+\label{s20b}
+\begin{enumerate}[(a)]
+  \setcounter{enumi}{3}
+  \item \textbf{Distance to teaching hospital} ($Z_1$): Plausibly exogenous --- residential location is largely determined before a heart attack occurs. Relevance: patients closer to teaching hospitals receive more intensive (expensive) care. Concern: residential sorting (healthier/wealthier people may live near hospitals).
+
+  \textbf{Property tax revenue} ($Z_2$): Relevant (higher tax revenue $\to$ better-funded hospitals $\to$ more spending). But potentially endogenous: wealthy areas have higher property taxes \emph{and} healthier populations. \alert{$Z_1$ is more credible.}
+
+  \item OLS: $\widehat{\beta}_1 = -0.05$ (spending appears harmful --- selection bias dominates). TSLS: $\widehat{\beta}_1 = 0.12$ (spending improves survival). The sign reversal is exactly what we expect when the dominant endogeneity is negative (sicker patients get more spending). After removing this contamination, IV reveals the \alert{true positive causal effect} of hospital spending on survival.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{q20}{\beamerbutton{Back to Problem 20}}
+\end{frame}
+
+\end{document}

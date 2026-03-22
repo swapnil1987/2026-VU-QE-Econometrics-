@@ -1,0 +1,178 @@
+---
+title: "Endogeneity vs Exogeneity: Why OLS Sometimes Fails"
+author: "Swapnil Singh"
+subtitle: "Quantitative Economics"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: show
+    fig_width: 10
+    fig_height: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center"
+)
+
+source("endogeneity_lab.R")
+set_plot_style()
+options(digits = 3)
+```
+
+# Learning goals
+
+1. Understand the regression model $Y_i = \beta_0 + \beta_1 X_i + u_i$
+2. See why OLS needs $\operatorname{cov}(X_i, u_i) = 0$
+3. See what changes when $X$ becomes correlated with the hidden error term $u$
+4. Build intuition for the three standard sources of endogeneity that we will study next
+
+---
+
+# The central idea
+
+In a simple regression, $u_i$ collects **everything that affects $Y_i$ but is not written explicitly in the model**.
+
+If $X_i$ is unrelated to that hidden part, OLS has a chance:
+$$
+\operatorname{cov}(X_i, u_i) = 0.
+$$
+
+If $X_i$ is related to the hidden part, OLS mixes up two forces:
+
+- the genuine causal effect of $X$ on $Y$
+- the hidden information inside $u$
+
+That is **endogeneity**:
+$$
+\operatorname{cov}(X_i, u_i) \neq 0.
+$$
+
+---
+
+# Step 1. A clean exogenous world
+
+In the next cell, `gamma = 0.0`. That means the regressor `X` is not built from the hidden error `u`.
+
+```{r exogenous}
+beta_true <- 1.0
+
+exogenous <- sample_basic_endogeneity(
+  n     = 300,
+  beta  = beta_true,
+  gamma = 0.0,
+  seed  = 2026
+)
+
+knitr::kable(basic_case_summary(exogenous, beta_true), digits = 3)
+plot_basic_case(exogenous, beta_true, "Exogenous case")
+```
+
+In the summary above, focus on two numbers:
+
+- `corr(X, u)`: it should be close to zero
+- `OLS slope`: it should be close to the true slope $\beta = 1$
+
+In the right-hand figure we can literally see the hidden error $u$ because this is a simulation. In real data we do **not** observe $u$, which is exactly why endogeneity is hard.
+
+---
+
+# Step 2. Now make the regressor endogenous
+
+In the next cell, `gamma = 0.9`. That means part of `X` is mechanically built from `u`.
+
+```{r endogenous}
+endogenous <- sample_basic_endogeneity(
+  n     = 300,
+  beta  = beta_true,
+  gamma = 0.9,
+  seed  = 2026
+)
+
+knitr::kable(basic_case_summary(endogenous, beta_true), digits = 3)
+plot_basic_case(endogenous, beta_true, "Endogenous case")
+```
+
+The pictures should now look different:
+
+- `corr(X, u)` is no longer near zero
+- the OLS line moves away from the true line
+
+This is the whole problem in one sentence: **OLS is biased because the regressor carries hidden information from the error term.**
+
+---
+
+# Step 3. Monte Carlo: bias grows as endogeneity gets stronger
+
+One sample can be unlucky. So we repeat the same experiment many times and average the results.
+
+```{r monte-carlo-basic}
+gamma_grid <- c(-1.0, -0.6, -0.3, 0.0, 0.3, 0.6, 1.0)
+
+mc_results <- mc_basic_endogeneity(
+  n            = 300,
+  beta         = beta_true,
+  gamma_values = gamma_grid,
+  reps         = 600,
+  seed         = 2026
+)
+
+knitr::kable(mc_results, digits = 3)
+plot_basic_monte_carlo(mc_results, beta_true)
+```
+
+Read the table and figures as follows:
+
+- when $\gamma = 0$, the average OLS estimate is close to the truth
+- when $\gamma > 0$, OLS is biased upward
+- when $\gamma < 0$, OLS is biased downward
+
+The sign of the bias depends on the sign of the correlation between $X$ and $u$.
+
+---
+
+# What creates endogeneity in practice?
+
+The algebra is always the same: $\operatorname{cov}(X, u) \neq 0$.
+
+But the **mechanism** can differ. In introductory econometrics, the three standard mechanisms are:
+
+1. **Omitted variable bias**: something important is left out of the regression, ends up inside $u$, and is correlated with $X$
+2. **Measurement error**: the regressor is measured with noise, so the noise leaks into both $X$ and $u$
+3. **Simultaneity**: $X$ and $Y$ are jointly determined, so $X$ already reflects shocks hitting $Y$
+
+Notebook 2 studies those three cases one by one.
+
+---
+
+# Try it yourself
+
+Change `trial_gamma`, re-knit (or run the chunk), and watch how the summary table and the figures move.
+
+```{r try-it-yourself}
+trial_gamma <- 0.4
+
+trial <- sample_basic_endogeneity(
+  n     = 300,
+  beta  = beta_true,
+  gamma = trial_gamma,
+  seed  = 99
+)
+
+knitr::kable(basic_case_summary(trial, beta_true), digits = 3)
+plot_basic_case(trial, beta_true,
+                paste0("Trial case with gamma = ", trial_gamma))
+```
+
+---
+
+# Takeaway
+
+If $X$ is clean, OLS can recover the true slope. If $X$ is contaminated by the hidden part of the outcome equation, OLS loses its causal interpretation.
+
+The next notebook answers the natural follow-up question: **what are the concrete economic stories that make $\operatorname{cov}(X, u) \neq 0$?**

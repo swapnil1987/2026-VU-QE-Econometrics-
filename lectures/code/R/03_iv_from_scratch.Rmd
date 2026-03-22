@@ -1,0 +1,566 @@
+---
+title: "Instrumental Variables from Scratch"
+author: "Swapnil Singh"
+subtitle: "Quantitative Economics"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: show
+    fig_width: 10
+    fig_height: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center"
+)
+
+source("endogeneity_lab.R")
+set_plot_style()
+options(digits = 4)
+set.seed(42)
+```
+
+# Learning goals
+
+1. See **why OLS fails** under simultaneity --- with algebra and simulation
+2. Build the **IV / TSLS estimator from scratch** (no packages)
+3. Apply IV to **real data**: returns to education using Card (1995)
+4. Compare our hand-coded estimates to `ivreg`
+
+---
+
+# Part 1: Simulation --- supply and demand
+
+We replicate the simultaneity example from the lecture slides.
+
+## The data-generating process
+
+$$
+\text{Demand}: \quad Q_i = \alpha_0 + \alpha_1 P_i + u_i^d \qquad (\alpha_1 < 0)
+$$
+$$
+\text{Supply}: \quad Q_i = \gamma_0 + \gamma_1 P_i + \delta Z_i + u_i^s \qquad (\gamma_1 > 0)
+$$
+
+- $Z_i$ is a **supply shifter** (e.g., weather, input costs) --- it enters supply but *not* demand.
+- Equilibrium: set demand $=$ supply, solve for $P_i$ and $Q_i$.
+
+```{r dgp-parameters}
+# True parameters
+alpha0 <- 10     # demand intercept
+alpha1 <- -0.5   # demand slope (negative: law of demand)
+gamma0 <- 2      # supply intercept
+gamma1 <- 0.8    # supply slope (positive: upward-sloping supply)
+delta  <- 1.5    # effect of supply shifter Z on quantity supplied
+
+n <- 5000        # sample size
+```
+
+## Solving for equilibrium
+
+Setting demand equal to supply and solving:
+
+$$
+P_i = \frac{(\gamma_0 - \alpha_0) + \delta Z_i + (u_i^s - u_i^d)}{\alpha_1 - \gamma_1}
+$$
+
+Then plug back into demand to get $Q_i$.
+
+```{r simulate-data}
+# Exogenous shocks
+Z   <- rnorm(n, mean = 5, sd = 2)   # supply shifter (e.g., rainfall index)
+u_d <- rnorm(n, mean = 0, sd = 1)   # demand shock
+u_s <- rnorm(n, mean = 0, sd = 1)   # supply shock (independent of u_d)
+
+# Equilibrium price (from setting demand = supply)
+P <- ((gamma0 - alpha0) + delta * Z + (u_s - u_d)) / (alpha1 - gamma1)
+
+# Equilibrium quantity (plug P into demand equation)
+Q <- alpha0 + alpha1 * P + u_d
+
+sim <- data.frame(P = P, Q = Q, Z = Z, u_d = u_d, u_s = u_s)
+```
+
+## Why is $P$ endogenous?
+
+The equilibrium price depends on the demand shock $u^d$. Let's verify:
+
+```{r endogeneity-check}
+cat("cov(P, u_d) =", cov(P, u_d), "\n")
+cat("cor(P, u_d) =", cor(P, u_d), "\n")
+```
+
+The covariance is clearly nonzero --- $P$ is **endogenous** in the demand equation.
+
+Meanwhile, our instrument $Z$ is exogenous (uncorrelated with $u^d$) but relevant (correlated with $P$):
+
+```{r instrument-check}
+cat("Exogeneity:  cov(Z, u_d) =", cov(Z, u_d), "\n")
+cat("Relevance:   cov(Z, P)   =", cov(Z, P),   "\n")
+```
+
+---
+
+## OLS: biased and inconsistent
+
+```{r ols-demand}
+ols_fit <- lm(Q ~ P, data = sim)
+cat("True demand slope (alpha1):", alpha1, "\n")
+cat("OLS estimate:              ", coef(ols_fit)["P"], "\n")
+```
+
+OLS is badly biased. From the lecture, we know:
+
+$$
+\hat{\alpha}_1^{OLS} \xrightarrow{p} \frac{\alpha_1 \sigma_s^2 + \gamma_1 \sigma_d^2}{\sigma_s^2 + \sigma_d^2}
+$$
+
+```{r theoretical-plim}
+sigma_d2 <- var(u_d)
+sigma_s2 <- var(u_s)
+plim_ols <- (alpha1 * sigma_s2 + gamma1 * sigma_d2) / (sigma_s2 + sigma_d2)
+cat("Theoretical plim of OLS:   ", plim_ols, "\n")
+cat("OLS estimate:              ", coef(ols_fit)["P"], "\n")
+```
+
+The OLS estimate is close to the theoretical plim --- a **variance-weighted average** of the demand and supply slopes. It estimates *neither* curve.
+
+```{r ols-bias-plot, fig.height=4}
+ggplot(sim, aes(x = P, y = Q)) +
+  geom_point(alpha = 0.15, size = 0.8, colour = "grey50") +
+  geom_abline(aes(intercept = alpha0, slope = alpha1, colour = "True demand"),
+              linewidth = 1.2) +
+  geom_abline(aes(intercept = coef(ols_fit)[1], slope = coef(ols_fit)[2],
+                  colour = "OLS"),
+              linewidth = 1.2, linetype = "dashed") +
+  scale_colour_manual(values = c("True demand" = "steelblue",
+                                  "OLS" = "firebrick")) +
+  labs(title = "OLS estimates a meaningless hybrid",
+       x = "Price (P)", y = "Quantity (Q)", colour = NULL) +
+  theme(legend.position = c(0.85, 0.85))
+```
+
+---
+
+# Part 2: IV / TSLS from scratch
+
+We now implement the two-stage least squares estimator **by hand**, following the derivation from the lecture.
+
+## The TSLS recipe
+
+1. **First stage**: Regress $X$ on $Z$ to get fitted values $\widehat{X}$
+2. **Second stage**: Regress $Y$ on $\widehat{X}$
+
+Or equivalently (as we derived): $\hat{\beta}_1^{TSLS} = s_{ZY} / s_{ZX}$.
+
+## Implementation: Wald / ratio estimator
+
+```{r iv-ratio}
+# TSLS as ratio of sample covariances (Wald estimator)
+iv_ratio <- cov(Z, Q) / cov(Z, P)
+
+cat("True demand slope (alpha1):", alpha1, "\n")
+cat("IV estimate (Wald ratio):  ", iv_ratio, "\n")
+cat("OLS estimate:              ", coef(ols_fit)["P"], "\n")
+```
+
+IV recovers the true parameter. Let's also do it via the two-stage procedure.
+
+## Implementation: two-stage procedure
+
+```{r iv-two-stage}
+# ---- Stage 1: regress P on Z ----
+stage1 <- lm(P ~ Z, data = sim)
+P_hat  <- fitted(stage1)
+
+cat("First-stage coefficient (pi_1):", coef(stage1)["Z"], "\n")
+cat("First-stage F-statistic:       ", summary(stage1)$fstatistic[1], "\n\n")
+
+# ---- Stage 2: regress Q on P_hat ----
+stage2 <- lm(Q ~ P_hat)
+
+cat("True demand slope (alpha1):    ", alpha1, "\n")
+cat("TSLS estimate (two-stage):     ", coef(stage2)["P_hat"], "\n")
+cat("IV estimate (Wald ratio):      ", iv_ratio, "\n")
+```
+
+Both routes give the same answer.
+
+### Verify the algebra: why they are identical
+
+From the lecture derivation:
+
+$$
+\hat{\beta}_1^{TSLS} = \frac{s_{\widehat{X}Y}}{s_{\widehat{X}}^2}
+= \frac{\hat{\pi}_1 \, s_{ZY}}{\hat{\pi}_1^2 \, s_Z^2}
+= \frac{s_{ZY}}{\hat{\pi}_1 \, s_Z^2}
+= \frac{s_{ZY}}{s_{ZX}}
+$$
+
+```{r verify-algebra}
+pi1_hat <- cov(Z, P) / var(Z)          # first-stage slope
+
+# Numerator path
+s_XhatY <- cov(P_hat, Q)
+cat("s_{X̂,Y}      =", s_XhatY, "\n")
+cat("π̂₁ × s_{ZY}  =", pi1_hat * cov(Z, Q), "\n\n")
+
+# Denominator path
+s_Xhat2 <- var(P_hat)
+cat("s²_{X̂}       =", s_Xhat2, "\n")
+cat("π̂₁² × s²_Z   =", pi1_hat^2 * var(Z), "\n\n")
+
+# Final ratio
+cat("s_{X̂,Y}/s²_{X̂}  =", s_XhatY / s_Xhat2, "\n")
+cat("s_{ZY}/s_{ZX}     =", cov(Z, Q) / cov(Z, P), "\n")
+```
+
+---
+
+## Building a reusable IV function
+
+```{r iv-function}
+iv_estimate <- function(y, x, z) {
+  # ---------------------------------------------------------------
+  # Hand-coded TSLS for simple IV (one endogenous regressor, one instrument)
+  #
+  # Args:
+  #   y : outcome vector
+  #   x : endogenous regressor vector
+  #   z : instrument vector (or matrix for multiple instruments)
+  #
+  # Returns: list with coefficients, standard errors, first-stage F
+
+  # ---------------------------------------------------------------
+  n <- length(y)
+
+  # --- First stage: x on z (with intercept) ---
+  Z_mat <- cbind(1, z)
+  pi_hat <- solve(crossprod(Z_mat), crossprod(Z_mat, x))   # OLS coefficients
+  x_hat  <- Z_mat %*% pi_hat                                # fitted values
+  e1     <- x - x_hat                                       # first-stage residuals
+
+  # First-stage F-statistic (for single instrument: t² = F)
+  pi_se  <- sqrt(sum(e1^2) / (n - ncol(Z_mat)) / sum((z - mean(z))^2))
+  F_stat <- (pi_hat[2] / pi_se)^2
+
+  # --- Second stage: y on x_hat (with intercept) ---
+  Xhat_mat <- cbind(1, x_hat)
+  beta_hat <- solve(crossprod(Xhat_mat), crossprod(Xhat_mat, y))
+
+  # --- Correct standard errors (use x, not x_hat, for residuals) ---
+  u_hat <- y - cbind(1, x) %*% beta_hat
+  sigma2 <- sum(u_hat^2) / (n - 2)
+
+  # Variance of TSLS estimator
+  bread <- solve(crossprod(Xhat_mat))
+  V     <- sigma2 * bread
+  se    <- sqrt(diag(V))
+
+  list(
+    coefficients = setNames(as.numeric(beta_hat), c("intercept", "slope")),
+    std_errors   = setNames(se, c("intercept", "slope")),
+    first_stage_F = F_stat,
+    residuals    = as.numeric(u_hat),
+    fitted_x     = as.numeric(x_hat)
+  )
+}
+```
+
+### Important detail: correct standard errors
+
+Notice that we compute residuals as $\hat{u}_i = Y_i - \hat{\beta}_0 - \hat{\beta}_1 X_i$ using the **original** $X$, *not* $\widehat{X}$. Using $\widehat{X}$ would understate the residual variance and produce standard errors that are **too small**. This is a classic pitfall of "manual" two-stage estimation.
+
+```{r apply-iv-function}
+iv_result <- iv_estimate(y = Q, x = P, z = Z)
+
+cat("TSLS coefficients:\n")
+cat("  intercept:", iv_result$coefficients["intercept"], "\n")
+cat("  slope:    ", iv_result$coefficients["slope"], "\n\n")
+
+cat("Standard errors:\n")
+cat("  intercept:", iv_result$std_errors["intercept"], "\n")
+cat("  slope:    ", iv_result$std_errors["slope"], "\n\n")
+
+cat("First-stage F:", iv_result$first_stage_F, "\n")
+cat("True alpha1:  ", alpha1, "\n")
+```
+
+---
+
+## Monte Carlo: OLS vs IV across repeated samples
+
+```{r monte-carlo, fig.height=4}
+n_sims <- 2000
+n_obs  <- 500
+ols_estimates <- numeric(n_sims)
+iv_estimates  <- numeric(n_sims)
+
+for (s in seq_len(n_sims)) {
+  # Draw new shocks each simulation
+  z_s   <- rnorm(n_obs, mean = 5, sd = 2)
+  ud_s  <- rnorm(n_obs, mean = 0, sd = 1)
+  us_s  <- rnorm(n_obs, mean = 0, sd = 1)
+
+  # Equilibrium
+  p_s <- ((gamma0 - alpha0) + delta * z_s + (us_s - ud_s)) / (alpha1 - gamma1)
+  q_s <- alpha0 + alpha1 * p_s + ud_s
+
+  # OLS
+  ols_estimates[s] <- cov(p_s, q_s) / var(p_s)
+
+  # IV (Wald ratio)
+  iv_estimates[s] <- cov(z_s, q_s) / cov(z_s, p_s)
+}
+
+mc_df <- data.frame(
+  estimate = c(ols_estimates, iv_estimates),
+  method   = rep(c("OLS", "IV"), each = n_sims)
+)
+
+ggplot(mc_df, aes(x = estimate, fill = method)) +
+  geom_histogram(alpha = 0.6, bins = 60, position = "identity") +
+  geom_vline(xintercept = alpha1, linewidth = 1.2, linetype = "solid") +
+  annotate("text", x = alpha1 - 0.02, y = Inf, label = paste("True α₁ =", alpha1),
+           vjust = 2, hjust = 1, size = 4) +
+  scale_fill_manual(values = c("OLS" = "firebrick", "IV" = "steelblue")) +
+  labs(title = "Monte Carlo: OLS is biased, IV is centered on the truth",
+       x = "Estimated demand slope", y = "Frequency", fill = NULL) +
+  theme(legend.position = c(0.88, 0.85))
+```
+
+```{r mc-summary}
+cat("Mean OLS estimate:", mean(ols_estimates),
+    "  (bias:", mean(ols_estimates) - alpha1, ")\n")
+cat("Mean IV estimate: ", mean(iv_estimates),
+    "  (bias:", mean(iv_estimates) - alpha1, ")\n\n")
+cat("SD of OLS:", sd(ols_estimates), "\n")
+cat("SD of IV: ", sd(iv_estimates), "\n")
+```
+
+IV is **unbiased** (centered on truth) but has **larger variance** than OLS. This is the classic bias--variance tradeoff with IV.
+
+---
+
+# Part 3: Real data --- returns to education
+
+We apply our hand-coded IV estimator to a classic question: **what is the causal return to an additional year of schooling?**
+
+## The problem
+
+$$
+\log(\text{wage}_i) = \beta_0 + \beta_1 \, \text{educ}_i + u_i
+$$
+
+OLS is biased because education is endogenous:
+
+- **Omitted ability**: more able people get more education *and* earn more
+- **Direction of bias**: OLS likely *overstates* the return to education
+
+## The instrument: proximity to college
+
+Card (1995) uses **proximity to a 4-year college** (`nearc4`) as an instrument:
+
+- **Relevance**: Growing up near a college lowers the cost of attending $\Rightarrow$ increases education
+- **Exogeneity**: Proximity to a college (plausibly) does not directly affect wages
+
+```{r download-data}
+# Download Card (1995) data from the Rdatasets repository (wooldridge package)
+url <- "https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/wooldridge/card.csv"
+card <- read.csv(url)
+
+# Key variables
+#   lwage    : log hourly wage
+#   educ     : years of education
+#   nearc4   : =1 if grew up near a 4-year college
+#   exper    : years of work experience
+#   black    : =1 if Black
+#   smsa     : =1 if lives in SMSA (metro area)
+#   south    : =1 if lives in the South
+
+cat("Observations:", nrow(card), "\n")
+cat("Variables:   ", ncol(card), "\n\n")
+cat("Summary of key variables:\n")
+summary(card[, c("lwage", "educ", "nearc4", "exper")])
+```
+
+## OLS estimate
+
+```{r ols-card}
+ols_card <- lm(lwage ~ educ + exper + I(exper^2) + black + smsa + south,
+               data = card)
+
+cat("OLS return to education:", coef(ols_card)["educ"], "\n")
+cat("  (SE:", summary(ols_card)$coefficients["educ", "Std. Error"], ")\n")
+```
+
+## Check instrument validity
+
+```{r first-stage-card}
+# Relevance: does nearc4 predict education?
+first_stage_card <- lm(educ ~ nearc4 + exper + I(exper^2) + black + smsa + south,
+                       data = card)
+
+cat("First-stage coefficient on nearc4:", coef(first_stage_card)["nearc4"], "\n")
+cat("  (SE:", summary(first_stage_card)$coefficients["nearc4", "Std. Error"], ")\n")
+cat("  (t-stat:", summary(first_stage_card)$coefficients["nearc4", "t value"], ")\n\n")
+
+# Partial F-statistic
+# For a single instrument, F = t²
+t_val <- summary(first_stage_card)$coefficients["nearc4", "t value"]
+cat("First-stage F-statistic:", t_val^2, "\n")
+cat("Rule of thumb (Staiger-Stock): F > 10?", t_val^2 > 10, "\n")
+```
+
+## IV by hand (with controls)
+
+With controls, we need to implement TSLS properly using the **Frisch-Waugh** logic: partial out the controls from everything, then apply IV to the residuals.
+
+```{r iv-hand-card}
+iv_with_controls <- function(y, x_endog, z_instrument, controls) {
+  # ------------------------------------------------------------------
+  # TSLS with controls, implemented from scratch
+  #
+  # Strategy: Frisch-Waugh-Lovell
+  #   1. Partial out controls from y, x, and z
+  #   2. Run first stage on residualized x and z
+  #   3. Run second stage on residualized y and x_hat
+  #   4. Compute correct standard errors
+  # ------------------------------------------------------------------
+  n <- length(y)
+  k <- ncol(controls) + 1  # total regressors (endog + controls)
+
+  W <- cbind(1, controls)   # control matrix with intercept
+
+  # Partial out controls (Frisch-Waugh)
+  M_W    <- diag(n) - W %*% solve(crossprod(W), t(W))
+  y_tild <- as.numeric(M_W %*% y)
+  x_tild <- as.numeric(M_W %*% x_endog)
+  z_tild <- as.numeric(M_W %*% z_instrument)
+
+  # First stage (residualized)
+  pi1     <- cov(z_tild, x_tild) / var(z_tild)
+  x_hat_t <- pi1 * z_tild
+
+  # First-stage F
+  e1_tild <- x_tild - x_hat_t
+  pi1_se  <- sqrt(sum(e1_tild^2) / (n - ncol(W) - 1) / sum(z_tild^2))
+  F_stat  <- (pi1 / pi1_se)^2
+
+  # Second stage (residualized)
+  beta1 <- cov(x_hat_t, y_tild) / var(x_hat_t)
+  # equivalently: cov(z_tild, y_tild) / cov(z_tild, x_tild)
+
+  # Intercept: recover from full regression
+  beta0 <- mean(y) - beta1 * mean(x_endog) -
+    as.numeric(solve(crossprod(W), crossprod(W, y - beta1 * x_endog))[1])
+
+  # Correct SE (use original x, not x_hat)
+  u_hat  <- y_tild - beta1 * x_tild
+  sigma2 <- sum(u_hat^2) / (n - k - 1)
+  se1    <- sqrt(sigma2 / sum(x_hat_t^2))
+
+  list(
+    beta1         = beta1,
+    se1           = se1,
+    first_stage_F = F_stat,
+    wald_check    = cov(z_tild, y_tild) / cov(z_tild, x_tild)
+  )
+}
+
+# Set up controls matrix
+controls <- as.matrix(card[, c("exper", "black", "smsa", "south")])
+controls <- cbind(controls, card$exper^2)  # add exper²
+
+iv_card <- iv_with_controls(
+  y            = card$lwage,
+  x_endog      = card$educ,
+  z_instrument = card$nearc4,
+  controls     = controls
+)
+
+cat("IV return to education:  ", iv_card$beta1, "\n")
+cat("  (SE:", iv_card$se1, ")\n")
+cat("  First-stage F:         ", iv_card$first_stage_F, "\n\n")
+cat("OLS return to education: ", coef(ols_card)["educ"], "\n")
+cat("  (SE:", summary(ols_card)$coefficients["educ", "Std. Error"], ")\n\n")
+cat("Wald check (should match):", iv_card$wald_check, "\n")
+```
+
+## Comparison with `ivreg`
+
+```{r ivreg-check}
+if (!requireNamespace("ivreg", quietly = TRUE)) {
+  install.packages("ivreg", repos = "https://cloud.r-project.org")
+}
+library(ivreg)
+
+iv_pkg <- ivreg(lwage ~ educ + exper + I(exper^2) + black + smsa + south |
+                  nearc4 + exper + I(exper^2) + black + smsa + south,
+                data = card)
+
+cat("Comparison of educ coefficient:\n")
+cat("  Hand-coded IV:", iv_card$beta1, "\n")
+cat("  ivreg package:", coef(iv_pkg)["educ"], "\n\n")
+cat("Comparison of SE:\n")
+cat("  Hand-coded IV:", iv_card$se1, "\n")
+cat("  ivreg package:", summary(iv_pkg)$coefficients["educ", "Std. Error"], "\n")
+```
+
+## Results summary
+
+```{r results-table}
+results <- data.frame(
+  Method = c("OLS", "IV (hand-coded)", "IV (ivreg)"),
+  Estimate = c(
+    coef(ols_card)["educ"],
+    iv_card$beta1,
+    coef(iv_pkg)["educ"]
+  ),
+  SE = c(
+    summary(ols_card)$coefficients["educ", "Std. Error"],
+    iv_card$se1,
+    summary(iv_pkg)$coefficients["educ", "Std. Error"]
+  )
+)
+results$CI_lower <- results$Estimate - 1.96 * results$SE
+results$CI_upper <- results$Estimate + 1.96 * results$SE
+
+knitr::kable(results, digits = 4, row.names = FALSE,
+             caption = "Returns to education: OLS vs IV")
+```
+
+```{r results-plot, fig.height=3.5}
+ggplot(results, aes(x = Method, y = Estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper), width = 0.15) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey60") +
+  labs(title = "Returns to education: OLS vs IV (Card 1995)",
+       y = "Coefficient on education", x = NULL) +
+  coord_flip()
+```
+
+## Interpretation
+
+- **OLS** estimates a return of ~`r round(coef(ols_card)["educ"] * 100, 1)`% per year of schooling.
+- **IV** estimates ~`r round(iv_card$beta1 * 100, 1)`% --- the IV estimate is *larger* than OLS.
+- This suggests that omitted-ability bias may actually push OLS *down*, not up. Card (1995) argues that the **local average treatment effect** (LATE) for compliers --- people whose education is affected by college proximity --- is larger than the average return.
+- IV standard errors are larger: less precision is the price of consistency.
+
+---
+
+# Key takeaways
+
+| | OLS | IV / TSLS |
+|---|---|---|
+| **Consistency** | Inconsistent if $\text{cov}(X, u) \neq 0$ | Consistent under relevance + exogeneity |
+| **Efficiency** | More efficient (smaller SE) | Less efficient (larger SE) |
+| **Bias** | Biased toward "hybrid" of structural parameters | Unbiased in large samples |
+| **Formula** | $s_{XY} / s_X^2$ | $s_{ZY} / s_{ZX}$ |
+| **What it estimates** | Something contaminated by endogeneity | LATE (for heterogeneous effects) |
