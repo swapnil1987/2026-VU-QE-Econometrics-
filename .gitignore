@@ -1,0 +1,39 @@
+# Markdown files
+*.md
+
+# Claude configuration
+.claude/
+
+# Source material
+self-material/
+
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.idx
+*.ilg
+*.ind
+*.lot
+*.lof
+*.run.xml
+*.bcf
+*.dvi
+*.ps
+*.xdv
+*-blx.bib
+
+# Python
+__pycache__/
+
+# Jupyter
+.ipynb_checkpoints/

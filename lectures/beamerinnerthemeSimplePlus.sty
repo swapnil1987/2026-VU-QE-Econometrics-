@@ -1,0 +1,75 @@
+%-------------------------------------------------------------
+%  Package: beamertheme-SimplePlus
+%  Author: Pin-Yen Huang (pyhuang97@gmail.com)
+%  Version: 1.1, 2025-01-07
+%  Link: https://github.com/pm25/SimplePlus-BeamerTheme
+%  This is free and unencumbered software released into the
+%  public domain; see <http://unlicense.org> for details.
+%-------------------------------------------------------------
+
+\mode<presentation>
+
+%--------------------------------------
+%  Margin Settings
+%--------------------------------------
+\setbeamersize{text margin left=2em,text margin right=2em}
+
+%--------------------------------------
+%  Navigation Settings
+%--------------------------------------
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+%--------------------------------------
+%  List Item Templates
+%--------------------------------------
+\setbeamertemplate{itemize item}[circle]
+\setbeamertemplate{itemize subitem}[circle]
+\setbeamertemplate{section in toc}[sections numbered]
+
+%--------------------------------------
+%  Frame Title Template
+%--------------------------------------
+\setbeamertemplate{frametitle}{
+    \vspace{0.5em}
+    \bfseries\insertframetitle
+    \vspace{-0.5em}
+    \par\noindent\rule{\textwidth}{0.4pt}
+}
+
+%--------------------------------------
+%  Title Page Template
+%--------------------------------------
+\setbeamertemplate{title page}{
+    \vfill
+    \begin{center}
+        \begin{beamercolorbox}[sep=8pt,center]{title}
+            \usebeamerfont{title}\inserttitle\par%
+            \ifx\insertsubtitle\@empty%
+            \else%
+                \vskip0.5em%
+                {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par}%
+            \fi%
+        \end{beamercolorbox}%
+        \vskip1em\par
+        \begin{beamercolorbox}[sep=8pt,center]{author}
+            \usebeamerfont{author}\insertauthor
+        \end{beamercolorbox}
+        \begin{beamercolorbox}[sep=8pt,center]{institute}
+            \usebeamerfont{institute}\insertinstitute
+        \end{beamercolorbox}
+        \begin{beamercolorbox}[sep=8pt,center]{date}
+            \usebeamerfont{date}\insertdate
+        \end{beamercolorbox}
+        \vskip0.5em
+        {\inserttitlegraphic}
+    \end{center}
+    \vfill
+}
+
+%--------------------------------------
+%  Block Templates
+%--------------------------------------
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+\mode<all>
