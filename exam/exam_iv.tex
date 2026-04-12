@@ -14,6 +14,7 @@
 \usepackage{fancyhdr}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{longtable}
 
 % Header/Footer
 \pagestyle{fancy}
@@ -258,11 +259,26 @@ Assuming the error terms $u_t$ and $v_t$ are i.i.d.\ and uncorrelated with each 
 \vspace{1em}
 
 \renewcommand{\arraystretch}{1.6}
-\begin{center}
-\begin{tabular}{clp{10cm}}
+\small
+\begin{longtable}{p{0.06\textwidth}p{0.11\textwidth}p{0.75\textwidth}}
+\caption*{Correct answers and short explanations} \\
 \toprule
 \textbf{Q} & \textbf{Answer} & \textbf{Explanation} \\
 \midrule
+\endfirsthead
+
+\toprule
+\textbf{Q} & \textbf{Answer} & \textbf{Explanation} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{3}{r}{\small Continued on next page} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
 1 & (b) & The three classical sources of endogeneity are omitted variable bias, measurement error, and simultaneous causality. Heteroskedasticity does \emph{not} cause endogeneity; it affects efficiency and standard errors, but not the consistency of OLS. \\
 
 2 & (a) & Instrument relevance requires $\operatorname{corr}(Z, X) \neq 0$, and instrument exogeneity requires $\operatorname{corr}(Z, u) = 0$. \\
@@ -286,8 +302,6 @@ Assuming the error terms $u_t$ and $v_t$ are i.i.d.\ and uncorrelated with each 
 11 & (c) & Randomization ensures \emph{internal} validity, not external validity. The finding that flipped classrooms work at an elite university may not generalize to less selective settings where students lack the preparation or motivation to learn material independently before class. Option (b) confuses internal and external validity; option (d) is irrelevant since randomization rules out reverse causality within the study.  \\
 
 12 & (b) & Substituting the policy rule into the structural equation yields the reduced form $g_t = (\gamma_0 + \gamma_1 \beta_0)/(1 - \beta_1 \gamma_1) + (\gamma_1 u_t + v_t)/(1 - \beta_1 \gamma_1)$. Hence $\operatorname{Cov}(g_t, u_t) = \gamma_1 \sigma_u^2 / (1 - \beta_1 \gamma_1)$, which equals zero \emph{only} when $\gamma_1 = 0$. When $\gamma_1 \neq 0$, OLS is inconsistent---not merely inefficient. Option (c) gets the sign wrong: with $\gamma_1 < 0$ and $\beta_1 > 0$, the covariance is negative, so OLS \emph{under}estimates $\beta_1$.  \\
-\bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
 
 \end{document}
