@@ -1,0 +1,1090 @@
+% =============================================================
+% Lecture: Panel Data Econometrics
+% Topic: Lecture 1 - Foundations
+% Course: Quantitative Economics, Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{appendixnumberbeamer}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\usetheme{SimplePlus}
+
+\title{Panel Data Econometrics}
+\subtitle{Lecture 1: Foundations}
+\author{Swapnil Singh}
+\institute{Lietuvos Bankas \and Kaunas University of Technology}
+\date{Vilnius University, 2026}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\plim}{\operatorname*{plim}}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\scriptsize\color{gray} Based on \texttt{lectures/panel-data-notes.tex}.}
+\end{frame}
+
+\begin{frame}{Roadmap}
+\tableofcontents
+\end{frame}
+
+\section{Why Panel Data?}
+
+\begin{frame}{Where panel data methods are useful}
+\small
+\begin{block}{Typical empirical settings}
+\begin{itemize}
+  \item \textbf{Labor}: workers observed across years; wages, training, job mobility.
+  \item \textbf{Firm finance and productivity}: firms observed over time; investment, leverage, exports.
+  \item \textbf{Public economics}: municipalities, schools, hospitals, or tax units tracked across periods.
+  \item \textbf{Development and political economy}: districts, villages, households, or countries followed through reforms and shocks.
+  \item \textbf{Industrial organization}: products, stores, or markets observed repeatedly as prices and demand move.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{Common feature}
+In all of these settings, units differ in ways we do not fully observe, and many of those differences are persistent.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Why researchers use panel data}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{What goes wrong in a cross-section}
+\begin{itemize}
+  \item High-$x$ units are compared with low-$x$ units.
+  \item But those units also differ in latent traits:
+  \begin{itemize}
+    \item ability
+    \item managerial quality
+    \item local institutions
+    \item baseline health
+  \end{itemize}
+  \item Then the regressor is mixed with omitted heterogeneity.
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{exampleblock}{What panel data improve}
+\begin{itemize}
+  \item We observe the same unit repeatedly.
+  \item We can compare a unit to its own past.
+  \item Time-invariant unit heterogeneity can be removed.
+  \item With time effects, we can also net out aggregate shocks common to all units.
+\end{itemize}
+\end{exampleblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Bottom line}
+Panel data are valuable because they often replace a weak \emph{across-unit} comparison with a stronger \emph{within-unit over time} comparison.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{A motivating comparison: wages and training}
+\small
+\begin{block}{Cross-sectional question}
+Do workers with more training tend to earn higher wages?
+\end{block}
+
+\pause
+\begin{alertblock}{Problem}
+Workers with more training may also differ in ability, motivation, firm quality, or family background. A high-training worker and a low-training worker are not cleanly comparable.
+\end{alertblock}
+
+\pause
+\begin{exampleblock}{Panel-data question}
+For the \emph{same worker}, when training rises, does wage rise relative to that worker's own baseline?
+\[
+Wage_{it} = \beta Train_{it} + \alpha_i + u_{it}
+\]
+If worker ability is stable over time, $\alpha_i$ can be removed by fixed effects or first differences.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{What changes when data become a panel?}
+\label{slide:comparisons}
+\begin{block}{Three canonical data structures}
+\begin{itemize}
+  \item \textbf{Cross-section}: many units, one date.
+  \item \textbf{Time series}: one unit, many dates.
+  \item \textbf{Panel}: many units, many dates.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{The central econometric question}
+Empirical work is about comparisons. Panel data let us compare:
+\begin{itemize}
+  \item one unit to another unit, and
+  \item the same unit to itself over time.
+\end{itemize}
+\end{alertblock}
+
+\pause
+\begin{exampleblock}{Fixed-effects intuition}
+Instead of asking whether high-$x$ units have high $y$, panel data let us ask:
+\[
+\text{When a given unit changes } x_{it}, \text{ does } y_{it} \text{ also change?}
+\]
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Within and between variation}
+\label{slide:withinbetween}
+\small
+For any regressor $x_{it}$, define the unit mean and grand mean:
+\[
+\bar{x}_i = \frac{1}{T}\sum_{t=1}^T x_{it},
+\qquad
+\bar{x} = \frac{1}{NT}\sum_{i=1}^N \sum_{t=1}^T x_{it}.
+\]
+Then every observation decomposes as
+\[
+x_{it} = \bar{x} + (\bar{x}_i-\bar{x}) + (x_{it}-\bar{x}_i).
+\]
+
+\pause
+\begin{block}{Interpretation}
+\begin{itemize}
+  \item $\bar{x}$: overall level
+  \item $\bar{x}_i - \bar{x}$: \textbf{between-unit} variation
+  \item $x_{it} - \bar{x}_i$: \textbf{within-unit} variation
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{Why this decomposition matters}
+Pooled OLS mixes between and within information. Fixed effects discards the between component and estimates the slope from within-unit variation only.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{What panel data help with and what they do not}
+\label{slide:proscons}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{Main gains}
+\begin{enumerate}
+  \item Control for time-invariant heterogeneity.
+  \item Study adjustment over time.
+  \item Separate level differences from changes.
+  \item Make the source of identification transparent.
+\end{enumerate}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{Not automatically solved}
+\begin{itemize}
+  \item time-varying omitted variables
+  \item reverse causality
+  \item anticipation effects
+  \item measurement error
+  \item endogenous attrition
+  \item spillovers
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{exampleblock}{Wage example}
+With repeated observations on workers, we can compare a worker to her own baseline and remove persistent traits such as ability or motivation, provided those traits are roughly stable over time.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Balanced, unbalanced, and the strategic value of panels}
+\label{slide:balanced}
+\small
+\begin{block}{Definitions}
+\begin{itemize}
+  \item \textbf{Balanced panel}: every unit is observed in the same set of periods.
+  \item \textbf{Unbalanced panel}: some units are missing in some periods.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{itemize}
+  \item Balanced panels simplify notation and algebra.
+  \item Unbalanced panels are common because of entry, exit, attrition, and missing records.
+  \item Most estimators adapt to unbalanced panels, but missingness can itself become an econometric problem.
+\end{itemize}
+
+\pause
+\begin{alertblock}{Right way to think about panel data}
+Panel data are not a magic technique. They are a chance to ask a better comparison question: compare a unit to its own past, and when needed also net out shocks common to all units.
+\end{alertblock}
+\end{frame}
+
+\section{The Unobserved Effects Model}
+
+\begin{frame}{The workhorse model}
+\label{slide:uem}
+\[
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it}
+\]
+
+\begin{block}{Objects in the model}
+\begin{itemize}
+  \item $x_{it}'\beta$: observed covariates
+  \item $\alpha_i$: time-invariant unit effect
+  \item $\lambda_t$: common time effect
+  \item $u_{it}$: idiosyncratic disturbance
+\end{itemize}
+\end{block}
+
+\pause
+\begin{exampleblock}{Economic content}
+\begin{itemize}
+  \item $\alpha_i$ may be ability, managerial talent, soil quality, baseline health, or institutional quality.
+  \item $\lambda_t$ may be inflation, recession, legislation, or technology shocks common to all units.
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Why the unit effect is central}
+\label{slide:alpha}
+\small
+Suppress time effects for a moment:
+\[
+y_{it} = \beta x_{it} + \alpha_i + u_{it}.
+\]
+Define the pooled error
+\[
+v_{it} = \alpha_i + u_{it}.
+\]
+
+\pause
+\begin{block}{The key failure mode}
+Pooled OLS requires
+\[
+\Cov(x_{it}, v_{it}) = \Cov(x_{it}, \alpha_i) + \Cov(x_{it}, u_{it}) = 0.
+\]
+So even if $\Cov(x_{it}, u_{it}) = 0$, pooled OLS fails whenever
+\[
+\Cov(x_{it}, \alpha_i) \neq 0.
+\]
+\end{block}
+
+\pause
+\begin{alertblock}{Interpretation}
+The difficult problem is not that units differ. It is that the permanent differences across units are often correlated with the regressors we care about.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Strict exogeneity in static panels}
+\label{slide:strictexog}
+\small
+The standard fixed-effects condition is
+\[
+\E[u_{it} \mid \alpha_i, \lambda_t, x_{i1}, \ldots, x_{iT}] = 0
+\qquad \text{for each } t.
+\]
+
+\begin{block}{What makes this strong?}
+It requires orthogonality to the \textbf{entire regressor path}, not only to current regressors.
+\end{block}
+
+\pause
+\begin{exampleblock}{Why it can fail}
+If a positive productivity shock today causes the firm to hire more workers next year, then $u_{it}$ predicts $x_{i,t+1}$. Contemporaneous exogeneity may hold while strict exogeneity fails.
+\end{exampleblock}
+
+\pause
+\begin{alertblock}{Three questions to ask in every application}
+\begin{enumerate}
+  \item What economic content sits inside $\alpha_i$?
+  \item Is $\alpha_i$ plausibly correlated with the regressors?
+  \item After removing $\alpha_i$ and perhaps $\lambda_t$, what variation is left to identify $\beta$?
+\end{enumerate}
+\end{alertblock}
+\end{frame}
+
+\section{Why Pooled OLS Fails}
+
+\begin{frame}{What pooled OLS is doing in a panel}
+\label{slide:pooledintuition}
+\small
+Ignoring the panel structure gives
+\[
+y_{it} = x_{it}'\beta + v_{it},
+\qquad
+v_{it} = \alpha_i + \lambda_t + u_{it}.
+\]
+
+\begin{block}{Pooled OLS compares}
+\begin{itemize}
+  \item one unit to another unit in the same period,
+  \item the same unit to itself over time,
+  \item and all mixtures of those two comparisons.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{Why this is dangerous}
+If cross-unit comparisons are contaminated by unobserved heterogeneity, pooled OLS blends credible within-unit information with contaminated between-unit information.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Probability limit of pooled OLS}
+\label{slide:poolsbias}
+\small
+In the scalar model
+\[
+y_{it} = \beta x_{it} + \alpha_i + u_{it},
+\]
+the pooled OLS estimator satisfies
+\[
+\plim \hat{\beta}^{POLS}
+=
+\beta
++ \frac{\Cov(x_{it}, \alpha_i)}{\Var(x_{it})}
++ \frac{\Cov(x_{it}, u_{it})}{\Var(x_{it})}.
+\]
+
+\begin{block}{Immediate implication}
+Even if $\Cov(x_{it},u_{it})=0$, pooled OLS is inconsistent whenever $\Cov(x_{it},\alpha_i)\neq 0$.
+\end{block}
+
+\pause
+\begin{exampleblock}{Wage panel}
+If higher-ability workers both train more and earn more, pooled OLS attributes part of the return to ability to the training regressor.
+\end{exampleblock}
+
+\hfill\hyperlink{app:poolsproof}{\beamerbutton{Proof}}
+\end{frame}
+
+\begin{frame}{Pooled OLS mixes between and within covariance}
+\label{slide:covdecomp}
+\small
+For any balanced panel,
+\[
+\Cov(x_{it}, y_{it})
+=
+\Cov(\bar{x}_i, \bar{y}_i)
++ \Cov(x_{it}-\bar{x}_i,\; y_{it}-\bar{y}_i).
+\]
+
+\begin{block}{Two components inside the pooled slope}
+\begin{enumerate}
+  \item \textbf{Between covariance}: high-$x$ units versus low-$x$ units
+  \item \textbf{Within covariance}: a unit versus its own average
+\end{enumerate}
+\end{block}
+
+\pause
+\begin{alertblock}{Core lesson}
+If the between component is contaminated by correlation between $\bar{x}_i$ and $\alpha_i$, pooled OLS answers the wrong empirical question even when panel data are available.
+\end{alertblock}
+
+\hfill\hyperlink{app:covproof}{\beamerbutton{Proof}}
+\end{frame}
+
+\begin{frame}{When pooled OLS can still be informative}
+\label{slide:pooleduse}
+\small
+\begin{block}{Possible uses}
+\begin{itemize}
+  \item $\alpha_i$ is genuinely uncorrelated with regressors.
+  \item The goal is descriptive rather than causal.
+  \item The panel is very short and there is almost no within variation.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{But the usual presumption in observational work}
+Permanent unit heterogeneity is often correlated with observed choices. In that setting, pooled OLS should be treated as a baseline comparison, not as the preferred causal estimator.
+\end{alertblock}
+\end{frame}
+
+\section{Fixed Effects as Within-Unit Identification}
+
+\begin{frame}{Two views of fixed effects}
+\label{slide:feidea}
+\small
+Start from
+\[
+y_{it} = x_{it}'\beta + \alpha_i + u_{it}.
+\]
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{Dummy-variable view}
+\[
+y_{it} = x_{it}'\beta + \sum_{j=1}^{N-1}\delta_j 1\{i=j\} + u_{it}.
+\]
+Each unit gets its own intercept.
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Within view}
+Subtract each unit's time average:
+\[
+y_{it}-\bar{y}_i = (x_{it}-\bar{x}_i)'\beta + (u_{it}-\bar{u}_i).
+\]
+Only within-unit movements remain.
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Identification}
+Fixed effects ask: when the same unit is above its own usual level of $x$, is it also above its own usual level of $y$?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{The within transformation}
+\label{slide:withinalgebra}
+\small
+Define demeaned variables
+\[
+\ddot{y}_{it}=y_{it}-\bar{y}_i,
+\qquad
+\ddot{x}_{it}=x_{it}-\bar{x}_i,
+\qquad
+\ddot{u}_{it}=u_{it}-\bar{u}_i.
+\]
+Then the transformed regression is
+\[
+\ddot{y}_{it} = \ddot{x}_{it}'\beta + \ddot{u}_{it}.
+\]
+
+\pause
+Applying OLS to the transformed equation yields
+\[
+\hat{\beta}^{FE}
+=
+\left(\sum_{i=1}^N \sum_{t=1}^T \ddot{x}_{it}\ddot{x}_{it}'\right)^{-1}
+\left(\sum_{i=1}^N \sum_{t=1}^T \ddot{x}_{it}\ddot{y}_{it}\right).
+\]
+
+\pause
+\begin{exampleblock}{Scalar case}
+\[
+\hat{\beta}^{FE}
+=
+\frac{\sum_{i=1}^N \sum_{t=1}^T (x_{it}-\bar{x}_i)(y_{it}-\bar{y}_i)}
+{\sum_{i=1}^N \sum_{t=1}^T (x_{it}-\bar{x}_i)^2}.
+\]
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{What fixed effects keep and what they discard}
+\label{slide:fekeep}
+\small
+\begin{block}{Kept}
+Within-unit variation in $x_{it}$ and $y_{it}$.
+\end{block}
+
+\begin{block}{Discarded}
+\begin{itemize}
+  \item time-invariant unit heterogeneity $\alpha_i$
+  \item all purely between-unit variation
+  \item any regressor that never changes within a unit
+\end{itemize}
+\end{block}
+
+\pause
+\begin{alertblock}{Important implication}
+If a regressor has lots of cross-sectional variation but barely moves within units, pooled OLS may look precise while FE is noisy. That is not a software problem. It is a lack-of-identification-variation problem.
+\end{alertblock}
+
+\pause
+\hfill\hyperlink{app:lsdvproof}{\beamerbutton{LSDV = FE}}
+\end{frame}
+
+\begin{frame}{Why FE is consistent under strict exogeneity}
+\label{slide:feorth}
+\small
+Under strict exogeneity,
+\[
+\E[u_{it}\mid \alpha_i, x_{i1}, \ldots, x_{iT}] = 0
+\qquad \text{for each } t,
+\]
+the transformed regressor is orthogonal to the transformed error:
+\[
+\E[\ddot{x}_{it}\ddot{u}_{it}] = 0.
+\]
+
+\begin{block}{Consequence}
+If the within second-moment matrix is nonsingular, the FE estimator is consistent as $N \to \infty$ with fixed $T$.
+\end{block}
+
+\pause
+\begin{alertblock}{What FE does not solve}
+\begin{itemize}
+  \item omitted variables that change within unit over time
+  \item reverse causality
+  \item measurement error
+\end{itemize}
+\end{alertblock}
+
+\hfill\hyperlink{app:feorthproof}{\beamerbutton{Orthogonality Proof}}
+\end{frame}
+
+\section{First Differences Versus Fixed Effects}
+
+\begin{frame}{First differencing removes the same unit effect}
+\label{slide:fdidea}
+\small
+From
+\[
+y_{it} = x_{it}'\beta + \alpha_i + u_{it},
+\]
+take adjacent differences:
+\[
+\Delta y_{it} = \Delta x_{it}'\beta + \Delta u_{it},
+\qquad t=2,\ldots,T.
+\]
+
+\begin{block}{Interpretation}
+\begin{itemize}
+  \item FE compares each period to the unit's average over the sample.
+  \item FD compares each period only to the immediately preceding period.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{exampleblock}{Economic language}
+FE asks whether the unit is above or below its usual level. FD asks whether the unit rose or fell relative to last period.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{When FE and FD coincide and when they do not}
+\label{slide:fevfd}
+\small
+\begin{block}{Exact identity when $T=2$}
+With only two periods, FE and FD extract the same single within-unit movement, so they produce the same slope coefficient.
+\end{block}
+
+\pause
+\begin{block}{Why they differ for $T>2$}
+FE uses all periods simultaneously through the unit mean. FD uses only adjacent comparisons. The filters react differently to trends, persistence, and measurement noise.
+\end{block}
+
+\pause
+\begin{alertblock}{Decision rule}
+Neither estimator dominates universally. The right choice depends on the serial correlation of the shocks, the measurement quality of $x_{it}$, and the economic meaning of within-unit variation.
+\end{alertblock}
+
+\hfill\hyperlink{app:fe_fd_t2}{\beamerbutton{Proof for $T=2$}}
+\end{frame}
+
+\begin{frame}{Why differencing changes the error process}
+\label{slide:fdserial}
+\small
+Even if $u_{it}$ is serially uncorrelated,
+\[
+\Delta u_{it} = u_{it} - u_{i,t-1}
+\]
+is mechanically serially correlated:
+\[
+\Var(\Delta u_{it}) = 2\sigma_u^2,
+\qquad
+\Cov(\Delta u_{it}, \Delta u_{i,t-1}) = -\sigma_u^2.
+\]
+
+\pause
+\begin{block}{Measurement-error warning}
+If
+\[
+x_{it}^{obs} = x_{it}^{\ast} + \nu_{it},
+\]
+then differencing gives
+\[
+\Delta x_{it}^{obs} = \Delta x_{it}^{\ast} + (\nu_{it}-\nu_{i,t-1}),
+\]
+so the transformed regressor contains two measurement-error draws.
+\end{block}
+
+\pause
+\begin{alertblock}{Practical lesson}
+First differencing can be appealing when the economic question is about changes, but it can be fragile when the regressor is noisy.
+\end{alertblock}
+
+\hfill\hyperlink{app:fdserialproof}{\beamerbutton{Derivation}}
+\end{frame}
+
+\section{Two-Way Fixed Effects}
+
+\begin{frame}{Why one-way fixed effects are often not enough}
+\label{slide:twfemotivation}
+\small
+The two-way model is
+\[
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it}.
+\]
+
+\begin{block}{Roles}
+\begin{itemize}
+  \item $\alpha_i$: permanent differences across units
+  \item $\lambda_t$: shocks common to all units in a period
+\end{itemize}
+\end{block}
+
+\pause
+\begin{exampleblock}{Firm investment and cash flow}
+Firm fixed effects remove permanent differences in productivity or management quality. They do not remove the boom year that simultaneously raises sales, cash flow, and investment for everyone.
+\end{exampleblock}
+
+\pause
+\begin{alertblock}{Interpretation}
+Two-way FE asks a stricter question: how does a unit move relative to its own average after removing what was common to everyone in that period?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Double demeaning}
+\label{slide:double}
+\small
+Define
+\[
+\bar{y}_i = \frac{1}{T}\sum_{t=1}^T y_{it},
+\qquad
+\bar{y}_t = \frac{1}{N}\sum_{i=1}^N y_{it},
+\qquad
+\bar{y} = \frac{1}{NT}\sum_{i=1}^N \sum_{t=1}^T y_{it},
+\]
+and analogously for $x_{it}$.
+
+\pause
+The two-way within transformation is
+\[
+\tilde{y}_{it} = y_{it} - \bar{y}_i - \bar{y}_t + \bar{y},
+\qquad
+\tilde{x}_{it} = x_{it} - \bar{x}_i - \bar{x}_t + \bar{x}.
+\]
+
+\begin{block}{Why add back the grand mean?}
+Because subtracting both the row mean and the column mean removes the overall level twice.
+\end{block}
+
+\hfill\hyperlink{app:twfeproof}{\beamerbutton{Proof}}
+\end{frame}
+
+\begin{frame}{What survives under two-way fixed effects?}
+\label{slide:twfevariation}
+\small
+Under two-way FE, the identifying variation is the part of $x_{it}$ that is
+\begin{enumerate}
+  \item not explained by the unit's average level, and
+  \item not explained by the period's average level.
+\end{enumerate}
+
+\pause
+\begin{block}{Not identified}
+Any regressor of the form
+\[
+x_{it} = a_i + b_t
+\]
+is absorbed completely and has transformed value $\tilde{x}_{it}=0$.
+\end{block}
+
+\pause
+\begin{exampleblock}{Three implications}
+\begin{itemize}
+  \item Time-invariant regressors disappear.
+  \item Purely aggregate regressors disappear once time effects are included.
+  \item Only idiosyncratic within-unit, within-time-cell variation survives both sweeps.
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{What two-way FE do and do not solve}
+\label{slide:twfelimits}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{Removed}
+\begin{itemize}
+  \item time-invariant unit heterogeneity
+  \item common period shocks
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{Still left}
+\begin{itemize}
+  \item unit-specific time-varying confounders
+  \item feedback to future regressors
+  \item staggered-adoption heterogeneity issues
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{block}{Why this matters for later topics}
+Two-way FE is the backbone of later designs such as difference-in-differences and event studies, so students need to know exactly what it absorbs and what it does not.
+\end{block}
+\end{frame}
+
+\section{Inference and Clustering}
+
+\begin{frame}{Why panel inference is different}
+\label{slide:cluster}
+\small
+After pooling, demeaning, differencing, or adding time effects, the variance still has the generic form
+\[
+\Var(\hat{\beta}\mid X^{\ast})
+=
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}
+X^{\ast\prime}\Omega X^{\ast}
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}.
+\]
+
+\pause
+If errors may be arbitrarily correlated within unit, the cluster-robust variance estimator is
+\[
+\widehat{\Var}(\hat{\beta})
+=
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}
+\left(\sum_{i=1}^N X_i^{\ast\prime}\hat{u}_i^{\ast}\hat{u}_i^{\ast\prime}X_i^{\ast}\right)
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}.
+\]
+
+\pause
+\begin{alertblock}{Key conceptual difference}
+Clustering keeps residual cross-products within unit instead of forcing them to zero.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Why clustering is usually the default}
+\label{slide:demeanedcorr}
+\small
+Even if the original disturbances are serially uncorrelated, demeaning creates dependence:
+\[
+\ddot{u}_{it} = u_{it} - \bar{u}_i.
+\]
+Then for $t \neq s$,
+\[
+\Var(\ddot{u}_{it}) = \sigma_u^2\left(1-\frac{1}{T}\right),
+\qquad
+\Cov(\ddot{u}_{it}, \ddot{u}_{is}) = -\frac{\sigma_u^2}{T}.
+\]
+
+\pause
+\begin{block}{Implication}
+Fixed effects remove $\alpha_i$, but they do not generally deliver independent residuals.
+\end{block}
+
+\pause
+\begin{alertblock}{Applied rule}
+In worker-year panels cluster by worker; in firm-quarter panels often by firm; if dependence also runs across units within a year, consider time clustering or two-way clustering.
+\end{alertblock}
+
+\hfill\hyperlink{app:demeanedproof}{\beamerbutton{Derivation}}
+\end{frame}
+
+\begin{frame}{Few clusters and inferential design}
+\label{slide:fewclusters}
+\small
+\begin{block}{Few-cluster warning}
+Cluster asymptotics rely on the number of clusters, not the number of rows. A panel with 40,000 observations but only 18 state clusters is still an 18-cluster inference problem.
+\end{block}
+
+\pause
+\begin{itemize}
+  \item Report the number of clusters.
+  \item Report which dimension is clustered.
+  \item Use cluster-based small-sample adjustments when needed.
+  \item In very small-cluster settings, the wild cluster bootstrap is often attractive.
+\end{itemize}
+
+\pause
+\begin{alertblock}{Common mistake}
+``Robust standard errors'' is too vague in panel work. Heteroskedasticity-robust but unclustered errors often overstate precision because they act as if dependent observations were independent.
+\end{alertblock}
+\end{frame}
+
+\section{Practical Diagnostics}
+
+\begin{frame}{A short checklist for applied panel work}
+\label{slide:checklist}
+\small
+\begin{enumerate}
+  \item What variation identifies the coefficient?
+  \item Does the regressor move enough within units?
+  \item Are time effects needed to absorb common shocks?
+  \item Which observations may share shocks?
+  \item How many independent clusters are there?
+  \item Do the results survive reasonable FE and clustering choices?
+\end{enumerate}
+
+\pause
+\begin{block}{Two distinctions students should keep straight}
+\begin{itemize}
+  \item \textbf{Time effects} address omitted aggregate shocks.
+  \item \textbf{Clustering} addresses dependent residuals and correct uncertainty quantification.
+\end{itemize}
+\end{block}
+
+\pause
+\begin{exampleblock}{How to read specification changes}
+Comparing pooled OLS, FE, FD, and FE with time effects is informative because each estimator uses different variation. Large coefficient shifts are substantive evidence about identification, not mere robustness ritual.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{R companions for Lecture 1}
+\label{slide:rcomp}
+\small
+The notes pair Lecture 1 with small scripts in \texttt{lectures/code/panel-data/}:
+\begin{itemize}
+  \item \texttt{01\_within\_between\_variation.R}
+  \item \texttt{02\_pooled\_ols\_vs\_fixed\_effects.R}
+  \item \texttt{03\_first\_differences\_vs\_fixed\_effects.R}
+  \item \texttt{04\_two\_way\_fixed\_effects.R}
+  \item \texttt{05\_clustered\_inference.R}
+\end{itemize}
+
+\pause
+\begin{block}{Purpose}
+Each script isolates one idea at a time: decomposition of variation, pooled-OLS bias, FE versus FD, common time shocks, and naive versus clustered uncertainty.
+\end{block}
+\end{frame}
+
+\section{Lecture 1 Summary}
+
+\begin{frame}{Lecture 1 summary}
+\label{slide:summary}
+\begin{enumerate}
+  \item Panel data matter because they let us compare units to themselves over time.
+  \item Pooled OLS usually fails by mixing contaminated between variation with within variation.
+  \item Fixed effects remove time-invariant unit heterogeneity by demeaning.
+  \item First differences remove the same heterogeneity by comparing adjacent periods.
+  \item Two-way fixed effects additionally net out common time shocks.
+  \item Credible panel inference usually requires clustered standard errors.
+\end{enumerate}
+
+\pause
+\begin{alertblock}{Unifying principle}
+Panel econometrics is about isolating variation that remains credible after removing persistent heterogeneity, then measuring uncertainty using the number of genuinely independent pieces of information rather than the raw number of rows.
+\end{alertblock}
+\end{frame}
+
+\appendix
+
+\section*{Appendix}
+
+\begin{frame}{Appendix: Proof of pooled-OLS bias formula}
+\label{app:poolsproof}
+\small
+For a scalar regressor, the population slope from regressing $y_{it}$ on $x_{it}$ is
+\[
+\frac{\Cov(x_{it}, y_{it})}{\Var(x_{it})}.
+\]
+Substitute $y_{it} = \beta x_{it} + \alpha_i + u_{it}$:
+\begin{align*}
+\Cov(x_{it}, y_{it})
+&= \Cov(x_{it}, \beta x_{it} + \alpha_i + u_{it}) \\
+&= \beta \Var(x_{it}) + \Cov(x_{it}, \alpha_i) + \Cov(x_{it}, u_{it}).
+\end{align*}
+Divide by $\Var(x_{it})$:
+\[
+\plim \hat{\beta}^{POLS}
+=
+\beta
++ \frac{\Cov(x_{it}, \alpha_i)}{\Var(x_{it})}
++ \frac{\Cov(x_{it}, u_{it})}{\Var(x_{it})}.
+\]
+\hfill\hyperlink{slide:poolsbias}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Proof of the covariance decomposition}
+\label{app:covproof}
+\small
+Write
+\[
+x_{it} = \bar{x}_i + \tilde{x}_{it},
+\qquad
+y_{it} = \bar{y}_i + \tilde{y}_{it},
+\]
+where $\tilde{x}_{it}=x_{it}-\bar{x}_i$ and $\tilde{y}_{it}=y_{it}-\bar{y}_i$. Then
+\begin{align*}
+\Cov(x_{it}, y_{it})
+&= \Cov(\bar{x}_i+\tilde{x}_{it}, \bar{y}_i+\tilde{y}_{it}) \\
+&= \Cov(\bar{x}_i,\bar{y}_i)
++ \Cov(\bar{x}_i,\tilde{y}_{it})
++ \Cov(\tilde{x}_{it},\bar{y}_i)
++ \Cov(\tilde{x}_{it},\tilde{y}_{it}).
+\end{align*}
+Because $\sum_{t=1}^T (y_{it}-\bar{y}_i)=0$ for every unit, the two cross terms are zero, so
+\[
+\Cov(x_{it}, y_{it})
+=
+\Cov(\bar{x}_i,\bar{y}_i) + \Cov(\tilde{x}_{it},\tilde{y}_{it}).
+\]
+\hfill\hyperlink{slide:covdecomp}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Why LSDV and within estimation coincide}
+\label{app:lsdvproof}
+\small
+Consider
+\[
+\min_{\beta,\alpha_1,\ldots,\alpha_N}
+\sum_{i=1}^N \sum_{t=1}^T
+\left(y_{it}-x_{it}'\beta-\alpha_i\right)^2.
+\]
+For fixed $\beta$, the first-order condition for $\alpha_i$ gives
+\[
+\hat{\alpha}_i(\beta) = \bar{y}_i - \bar{x}_i'\beta.
+\]
+Substitute back into the objective:
+\[
+\min_{\beta}
+\sum_{i=1}^N \sum_{t=1}^T
+\left[(y_{it}-\bar{y}_i) - (x_{it}-\bar{x}_i)'\beta\right]^2.
+\]
+This is exactly the OLS criterion from regressing $\ddot{y}_{it}$ on $\ddot{x}_{it}$, so the slope coefficients coincide.
+\hfill\hyperlink{slide:fekeep}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Orthogonality behind fixed effects}
+\label{app:feorthproof}
+\small
+Because $\ddot{x}_{it}$ is a function of the full regressor path $(x_{i1},\ldots,x_{iT})$,
+\[
+\E[\ddot{x}_{it}u_{is}]
+=
+\E\!\left[\ddot{x}_{it}\E[u_{is}\mid \alpha_i,x_{i1},\ldots,x_{iT}]\right] = 0
+\]
+for every $s$ under strict exogeneity. Therefore
+\[
+\E[\ddot{x}_{it}\bar{u}_i]
+= \frac{1}{T}\sum_{s=1}^T \E[\ddot{x}_{it}u_{is}] = 0.
+\]
+Taking $s=t$ also gives $\E[\ddot{x}_{it}u_{it}] = 0$. Hence
+\[
+\E[\ddot{x}_{it}\ddot{u}_{it}]
+=
+\E[\ddot{x}_{it}(u_{it}-\bar{u}_i)]
+= 0.
+\]
+This is the moment condition that underpins FE consistency.
+\hfill\hyperlink{slide:feorth}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: FE equals FD when $T=2$}
+\label{app:fe_fd_t2}
+\small
+When $T=2$,
+\[
+\bar{y}_i = \frac{y_{i1}+y_{i2}}{2},
+\qquad
+\bar{x}_i = \frac{x_{i1}+x_{i2}}{2}.
+\]
+So
+\[
+y_{i2}-\bar{y}_i = \frac{y_{i2}-y_{i1}}{2} = \frac{\Delta y_{i2}}{2},
+\qquad
+y_{i1}-\bar{y}_i = -\frac{\Delta y_{i2}}{2},
+\]
+and similarly
+\[
+x_{i2}-\bar{x}_i = \frac{\Delta x_{i2}}{2},
+\qquad
+x_{i1}-\bar{x}_i = -\frac{\Delta x_{i2}}{2}.
+\]
+Every demeaned observation is just a constant multiple of the differenced observation, so numerator and denominator scale by the same factor and the FE and FD slope coefficients are identical.
+\hfill\hyperlink{slide:fevfd}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Why differenced errors are serially correlated}
+\label{app:fdserialproof}
+\small
+If $\Delta u_{it} = u_{it} - u_{i,t-1}$ and the original errors are serially uncorrelated with variance $\sigma_u^2$, then
+\begin{align*}
+\Var(\Delta u_{it})
+&= \Var(u_{it}) + \Var(u_{i,t-1}) - 2\Cov(u_{it},u_{i,t-1}) \\
+&= 2\sigma_u^2.
+\end{align*}
+For adjacent differenced errors,
+\begin{align*}
+\Cov(\Delta u_{it}, \Delta u_{i,t-1})
+&= \Cov(u_{it}-u_{i,t-1}, u_{i,t-1}-u_{i,t-2}) \\
+&= -\Var(u_{i,t-1}) = -\sigma_u^2.
+\end{align*}
+So differencing mechanically creates negative serial correlation even when the original disturbances were serially independent.
+\hfill\hyperlink{slide:fdserial}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Double demeaning removes unit and time effects}
+\label{app:twfeproof}
+\small
+Start from
+\[
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it}.
+\]
+Take the unit mean, time mean, and grand mean:
+\[
+\bar{y}_i = \bar{x}_i'\beta + \alpha_i + \bar{\lambda} + \bar{u}_i,
+\]
+\[
+\bar{y}_t = \bar{x}_t'\beta + \bar{\alpha} + \lambda_t + \bar{u}_t,
+\]
+\[
+\bar{y} = \bar{x}'\beta + \bar{\alpha} + \bar{\lambda} + \bar{u}.
+\]
+Now compute
+\[
+y_{it} - \bar{y}_i - \bar{y}_t + \bar{y}
+=
+(x_{it} - \bar{x}_i - \bar{x}_t + \bar{x})'\beta
++ (u_{it} - \bar{u}_i - \bar{u}_t + \bar{u}),
+\]
+because the $\alpha_i$ and $\lambda_t$ terms cancel exactly.
+\hfill\hyperlink{slide:double}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: Demeaned errors are mechanically correlated}
+\label{app:demeanedproof}
+\small
+Let
+\[
+\ddot{u}_{it} = u_{it}-\bar{u}_i,
+\qquad
+\bar{u}_i = \frac{1}{T}\sum_{t=1}^T u_{it},
+\]
+with serially uncorrelated $u_{it}$ and variance $\sigma_u^2$. Then
+\[
+\Var(\bar{u}_i) = \frac{\sigma_u^2}{T},
+\qquad
+\Cov(u_{it}, \bar{u}_i) = \frac{\sigma_u^2}{T}.
+\]
+Hence
+\[
+\Var(\ddot{u}_{it})
+=
+\Var(u_{it})+\Var(\bar{u}_i)-2\Cov(u_{it},\bar{u}_i)
+= \sigma_u^2\left(1-\frac{1}{T}\right).
+\]
+For $t \neq s$,
+\[
+\Cov(\ddot{u}_{it}, \ddot{u}_{is})
+=
+0 - \frac{\sigma_u^2}{T} - \frac{\sigma_u^2}{T} + \frac{\sigma_u^2}{T}
+= -\frac{\sigma_u^2}{T}.
+\]
+\hfill\hyperlink{slide:demeanedcorr}{\beamerbutton{Back}}
+\end{frame}
+
+\end{document}

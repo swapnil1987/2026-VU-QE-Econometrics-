@@ -1,0 +1,1391 @@
+% !TeX program = pdflatex
+% Main file for the panel-data lecture notes.
+% Compile this file, not tufte-style.tex.
+\input{tufte-style.tex}
+
+\title{Panel Data Econometrics}
+\author{Swapnil Singh}
+\date{Vilnius University, 2026}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\newcommand{\plim}{\operatorname*{plim}}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section*{Notation and Scope}
+We use the baseline panel-data notation
+\[
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it},
+\]
+where $i$ indexes units and $t$ indexes time. Lecture 1 develops the core static panel-data framework, including inference and practical guidance for applied panel work. Lecture 2 then extends that framework to difference-in-differences, random effects, and dynamic panels.
+
+\section{Lecture 1: Foundations}
+
+\subsection{Why Panel Data?}
+Empirical work is always built on comparisons. The central practical question is: \emph{who is being compared to whom?} A cross-section compares one unit to another unit at a given date. A panel adds a second and often more credible comparison: the unit can be compared to itself over time.
+
+\begin{defN}
+A \emph{cross-section} observes many units once. A \emph{time series} observes one unit repeatedly. A \emph{panel} observes many units repeatedly over time.
+\end{defN}
+
+Typical panel units are workers, firms, households, schools, hospitals, municipalities, countries, or products. Typical time dimensions are years, quarters, months, or days. The notation $i=1,\ldots,N$ indexes units and $t=1,\ldots,T$ indexes time.
+
+\paragraph{The basic econometric appeal.}
+Suppose we want to estimate the effect of a regressor $x_{it}$ on an outcome $y_{it}$. If we only have a cross-section, then units with high $x_i$ are compared to units with low $x_i$. But those units may differ in many other ways. With panel data, we can ask a sharper question:
+\begin{quote}
+When a given unit changes $x_{it}$, does $y_{it}$ also change?
+\end{quote}
+That is the beginning of fixed-effects thinking.
+
+\paragraph{Three data structures.}
+It is useful to contrast the three canonical designs:
+\begin{itemize}
+\item \textbf{Cross-section:} compare different units at one moment in time.
+\item \textbf{Time series:} compare one aggregate or one unit across many dates.
+\item \textbf{Panel:} compare different units \emph{and} compare the same unit over time.
+\end{itemize}
+
+This extra dimension is not merely a way to get more observations. If the sample has $N$ units and $T$ periods, then a panel has $NT$ rows, but the main value is usually not sample size alone. The main value is that panel data reveal the sources of variation that ordinary cross-sections conceal.
+
+\paragraph{Between variation and within variation.}
+For a generic regressor $x_{it}$, define the unit mean
+\[
+\bar{x}_i = \frac{1}{T}\sum_{t=1}^T x_{it}
+\]
+and the grand mean
+\[
+\bar{x} = \frac{1}{NT}\sum_{i=1}^N \sum_{t=1}^T x_{it}.
+\]
+Then we can decompose each observation as
+\begin{equation}
+x_{it} = \bar{x} + (\bar{x}_i-\bar{x}) + (x_{it}-\bar{x}_i).
+\label{eq:x_decomp}
+\end{equation}
+Equation \eqref{eq:x_decomp} separates three objects:
+\begin{itemize}
+\item the overall mean $\bar{x}$,
+\item the \emph{between-unit} component $\bar{x}_i-\bar{x}$,
+\item the \emph{within-unit} component $x_{it}-\bar{x}_i$.
+\end{itemize}
+
+This decomposition is fundamental. A pooled regression generally mixes between and within information. A fixed-effects regression discards the between component and estimates the effect of the within component only. Much of panel econometrics is therefore about deciding which variation is credible for the question at hand.
+
+\paragraph{A simple wage example.}
+Suppose we study the effect of training hours on wages. In a cross-section, workers with more training may earn more because they are better trained, but also because they are more talented, more motivated, or employed at better firms. Denote training by $Train_{it}$ and wages by $Wage_{it}$. A cross-sectional comparison of
+\[
+Wage_i = \beta Train_i + e_i
+\]
+mixes the effect of training with permanent differences across workers.
+
+With panel data, we can observe the same worker repeatedly:
+\[
+Wage_{it} = \beta Train_{it} + \text{worker effect}_i + \text{other shocks}_{it}.
+\]
+If worker ability is roughly constant over the sample period, then repeated observations make it possible to remove that permanent worker effect and compare the worker to herself over time.
+
+\begin{boxD}
+\textbf{Why this matters.}
+In labor, development, health, finance, and public economics, many of the most important omitted variables are persistent. Ability, family background, entrepreneurial talent, patient severity, managerial quality, and local institutional quality often do not move much from one period to the next. Panel data are valuable precisely because they give us a way to deal with those persistent latent differences.
+\end{boxD}
+
+\paragraph{Why the same-unit comparison is often more credible.}
+To see the logic, suppose a unit-specific omitted factor $a_i$ affects both $y_{it}$ and $x_{it}$. In a pure cross-section, the comparison between a high-$x$ unit and a low-$x$ unit also compares a high-$a$ unit and a low-$a$ unit. That creates omitted-variable bias. In a panel, if $a_i$ is fixed over time, then the comparison of a unit with its own past values holds $a_i$ constant automatically.
+
+This is the single most important reason panel data are so widely used in applied work. They do not magically create exogeneity, but they often move the empirical design from an implausible comparison to a more defensible one.
+
+\paragraph{What panel data help with.}
+There are at least four recurring gains from a panel:
+\begin{enumerate}
+\item \textbf{Controlling for unobserved time-invariant heterogeneity.} This is the classic fixed-effects gain.
+\item \textbf{Studying adjustment and dynamics.} Once we have repeated observations, we can ask how outcomes evolve before and after a change in policy or exposure.
+\item \textbf{Separating level differences from change over time.} The same regressor can have a strong between relationship and a weak within relationship, or the reverse.
+\item \textbf{Improving design transparency.} Panel notation makes clear whether identification comes from long-run differences across units, short-run changes within units, or both.
+\end{enumerate}
+
+\paragraph{A useful thought experiment.}
+Imagine two cities observed in two years. City A always has higher public spending and higher educational attainment than City B. A cross-section cannot tell whether spending causes education or whether City A simply has deeper underlying advantages. But if City A changes spending sharply while City B does not, and if the underlying city characteristics are stable, the panel comparison becomes more informative because it tracks changes relative to each city's baseline.
+
+\paragraph{Balanced and unbalanced panels.}
+In practice, not every unit is always observed in every period.
+\begin{defN}
+A panel is \emph{balanced} if every unit is observed in the same set of periods. It is \emph{unbalanced} if some units are missing in some periods.
+\end{defN}
+Balanced panels simplify notation and algebra. Unbalanced panels are common in actual datasets because of entry, exit, attrition, missing records, or survey nonresponse. Most panel estimators can be adapted to unbalanced panels, but missingness can itself become an econometric issue if it is systematic.
+
+\paragraph{What panel data do \emph{not} solve.}
+It is equally important to be precise about limitations. Panel data help when the confounder is fixed within unit over time. They do \emph{not} automatically solve:
+\begin{itemize}
+\item time-varying omitted variables,
+\item reverse causality,
+\item anticipation effects,
+\item measurement error,
+\item endogenous sample attrition,
+\item spillovers across units.
+\end{itemize}
+
+For example, even if hospital fixed effects remove time-invariant hospital quality, a sudden local epidemic can still change both hospital staffing and patient outcomes. That is a time-varying shock, so panel structure alone does not solve the problem.
+
+\begin{boxF}
+\textbf{Common mistake.}
+``Panel data eliminate omitted-variable bias'' is too strong. The correct statement is narrower: panel methods can remove omitted variables that are constant within a unit over time. They do not automatically remove omitted variables that move over time.
+\end{boxF}
+
+\paragraph{The strategic value of panel data.}
+The right way to think about panel data is not as a magic technique, but as an opportunity to ask a better comparison question. Instead of comparing different units with different unobserved histories, we compare a unit to its own past while also controlling for common time shocks when needed. That shift in the comparison is the bridge to the unobserved-effects model.
+
+\subsection{The Unobserved Effects Model}
+The workhorse model for static panel analysis is the \emph{unobserved effects model}:
+\begin{equation}
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it}.
+\label{eq:uem}
+\end{equation}
+This equation is simple, but it organizes almost everything that matters in introductory panel econometrics. Each term plays a distinct role:
+\begin{itemize}
+\item $y_{it}$ is the outcome.
+\item $x_{it}$ is a vector of observed regressors.
+\item $\beta$ is the parameter vector of interest.
+\item $\alpha_i$ is the unit effect, capturing time-invariant heterogeneity.
+\item $\lambda_t$ is the time effect, capturing shocks common to all units in period $t$.
+\item $u_{it}$ is the idiosyncratic disturbance, varying across both $i$ and $t$.
+\end{itemize}
+
+\paragraph{Why this is called an unobserved-effects model.}
+The term ``unobserved effects'' refers to components of the outcome that are not in the observed regressor vector $x_{it}$ but still matter for $y_{it}$. The most important one is $\alpha_i$, the unit-specific effect. In applications, $\alpha_i$ may stand for ability, culture, political capacity, managerial talent, soil quality, neighborhood quality, baseline health, or some other latent characteristic that is hard to measure and largely stable over time.
+
+The component $\lambda_t$ is equally important in many applications. It captures shocks common to all units in a given period: inflation, macroeconomic policy, business-cycle conditions, national legislation, commodity prices, or technology trends. The remaining disturbance $u_{it}$ is then what is left after accounting for observed regressors, permanent unit heterogeneity, and common period shocks.
+
+\paragraph{Conditional mean interpretation.}
+Equation \eqref{eq:uem} implies the conditional mean
+\begin{equation}
+\E[y_{it} \mid x_{it}, \alpha_i, \lambda_t] = x_{it}'\beta + \alpha_i + \lambda_t
+\label{eq:conditional_mean_uem}
+\end{equation}
+when $\E[u_{it}\mid x_{it},\alpha_i,\lambda_t]=0$. This is useful because it says that the model is additive in three layers:
+\begin{itemize}
+\item an observed part, $x_{it}'\beta$,
+\item a time-invariant unit-specific part, $\alpha_i$,
+\item a common time-specific part, $\lambda_t$.
+\end{itemize}
+
+That additive structure is not just convenient notation. It is an empirical claim. It says, for example, that permanent worker ability enters as a level shift, and that aggregate time shocks also enter as level shifts. Much of the value of panel methods comes from the fact that these additive terms can be removed algebraically.
+
+\paragraph{A scalar version helps intuition.}
+To focus on the main issue, temporarily suppress time effects and consider
+\begin{equation}
+y_{it} = \beta x_{it} + \alpha_i + u_{it}.
+\label{eq:scalar_uem}
+\end{equation}
+This specification says that two people with the same observed regressor $x_{it}$ can still differ systematically in their outcomes because they have different $\alpha_i$. If one worker is permanently more productive than another, then wages differ even when current training, experience, or hours are the same. The econometric problem is that the high-ability worker may also choose different values of $x_{it}$.
+
+\paragraph{Why $\alpha_i$ is the central object.}
+The main challenge in panel data is rarely the existence of unobserved heterogeneity by itself. The challenge is \emph{correlated} unobserved heterogeneity. If $\alpha_i$ is correlated with the regressor path $(x_{i1},\ldots,x_{iT})$, then ignoring $\alpha_i$ creates omitted-variable bias.
+
+Formally, define the composite error
+\[
+v_{it} = \alpha_i + \lambda_t + u_{it}.
+\]
+Then pooled regression treats $v_{it}$ like an ordinary disturbance. But if
+\[
+\Cov(x_{it},\alpha_i) \neq 0,
+\]
+the regressor is correlated with the composite error, and ordinary least squares no longer recovers $\beta$.
+
+\begin{boxD}
+\textbf{Why this matters.}
+The panel-data problem is usually not that people, firms, or regions differ. Of course they differ. The problem is that these differences are often related to the regressors we care about. Once that happens, an unobserved effect becomes an omitted variable, and the entire question becomes how to handle it.
+\end{boxD}
+
+\paragraph{Examples of correlated unobserved effects.}
+The logic is easier to see in concrete settings:
+\begin{itemize}
+\item \textbf{Education and earnings.} More able workers may choose more education. Then ability is part of $\alpha_i$ and is correlated with schooling.
+\item \textbf{Firm investment and cash flow.} More productive firms may have persistently higher cash flow and investment opportunities. Productivity is part of $\alpha_i$.
+\item \textbf{Municipal spending and outcomes.} Better-run municipalities may both spend more effectively and have better outcomes for reasons not fully observed in the data.
+\item \textbf{Health utilization and insurance.} Sicker individuals may select different insurance plans, so baseline health status belongs in $\alpha_i$ and is correlated with treatment intensity.
+\end{itemize}
+
+\paragraph{Time effects are conceptually different from unit effects.}
+Unit effects $\alpha_i$ control for permanent differences \emph{across units}. Time effects $\lambda_t$ control for aggregate shocks \emph{across periods}. In many empirical settings both are needed. Suppose we estimate the effect of firm-level leverage on investment. Firm fixed effects remove stable differences in management quality or industry position, but they do nothing about a recession that hits all firms in a given year. That recession belongs in $\lambda_t$.
+
+\paragraph{Strict exogeneity.}
+The central exogeneity condition for static fixed-effects analysis is \emph{strict exogeneity}:
+\begin{equation}
+\E[u_{it} \mid \alpha_i, \lambda_t, x_{i1},\dots,x_{iT}] = 0
+\qquad \text{for each } t.
+\label{eq:strict_exogeneity}
+\end{equation}
+This condition is stronger than contemporaneous exogeneity. It does \emph{not} merely require $u_{it}$ to be uncorrelated with current regressors $x_{it}$. It requires orthogonality to the \emph{entire regressor history and future path} for the unit.
+
+To see why this is demanding, note that \eqref{eq:strict_exogeneity} implies
+\[
+\E[u_{it} \mid \alpha_i,\lambda_t,x_{it}] = 0
+\]
+but the reverse implication does not hold. A shock today can violate strict exogeneity by changing next period's regressors even if current regressors are uncorrelated with today's shock.
+
+For instance, suppose a positive productivity shock raises current profits, and the firm responds by increasing next period's employment or capital. Then $u_{it}$ helps predict $x_{i,t+1}$, so \eqref{eq:strict_exogeneity} fails. This is one reason static fixed-effects methods are not automatically valid in dynamic decision settings.
+
+\paragraph{What strict exogeneity buys us.}
+Under \eqref{eq:strict_exogeneity}, once we remove $\alpha_i$ and $\lambda_t$, the remaining variation in $x_{it}$ behaves like an exogenous regressor in the transformed equation. This is the condition that justifies fixed-effects estimation in the standard static model.
+
+\paragraph{A covariance-based view.}
+It is often helpful to rewrite the key issue using covariances. Suppressing time effects for clarity, the pooled regression error is
+\[
+v_{it} = \alpha_i + u_{it}.
+\]
+Then consistency of pooled \ac{OLS} requires
+\[
+\Cov(x_{it},v_{it}) = \Cov(x_{it},\alpha_i) + \Cov(x_{it},u_{it}) = 0.
+\]
+Even if $\Cov(x_{it},u_{it})=0$, pooled \ac{OLS} still fails whenever $\Cov(x_{it},\alpha_i)\neq 0$. The panel estimator is therefore designed around one specific task: separate out the persistent component $\alpha_i$ from the transitory component $u_{it}$.
+
+\paragraph{Two competing philosophies.}
+At this point panel econometrics splits into two broad approaches:
+\begin{enumerate}
+\item \textbf{Fixed effects:} allow $\alpha_i$ to be arbitrarily correlated with the regressors and remove it before estimation.
+\item \textbf{Random effects:} assume $\alpha_i$ is orthogonal to the regressors and use both within and between variation.
+\end{enumerate}
+The fixed-effects approach is usually more credible in observational work because it does not ask us to believe that permanent latent traits are unrelated to observed choices.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Students often think ``fixed effects'' means the unit effects are nonrandom constants and ``random effects'' means they are random variables. That is not the real distinction. The real distinction is whether we allow $\alpha_i$ to be correlated with the regressors. Fixed effects allow that correlation; random effects rule it out.
+\end{boxF}
+
+\paragraph{Three practical questions to ask in every application.}
+Before estimating any panel model, it helps to ask:
+\begin{enumerate}
+\item What is the likely economic content of $\alpha_i$?
+\item Is that unobserved effect plausibly correlated with the regressors?
+\item After removing $\alpha_i$ and perhaps $\lambda_t$, what source of variation is left to identify $\beta$?
+\end{enumerate}
+These questions are more informative than mechanically asking whether a regression has unit dummies.
+
+\paragraph{A final interpretation.}
+Equation \eqref{eq:uem} is best thought of as a disciplined description of how panel outcomes are generated. It says that observed outcomes come from three layers: observed covariates, stable unit-specific heterogeneity, and time-specific common shocks, plus an idiosyncratic remainder. Once the model is written this way, the next step is immediate: if we ignore $\alpha_i$, what bias arises, and how do fixed-effects and first-difference methods remove it? That is the purpose of the next sections.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Removing $\alpha_i$ is algebra. Identifying $\beta$ is economics. The real question is whether the variation left after removing $\alpha_i$ and perhaps $\lambda_t$ is plausibly exogenous.
+\end{boxD}
+
+\subsection{Why Pooled OLS Fails}
+Suppose we ignore the panel structure and estimate
+\begin{equation}
+y_{it} = x_{it}'\beta + v_{it},
+\qquad
+v_{it} = \alpha_i + \lambda_t + u_{it}.
+\label{eq:pooled}
+\end{equation}
+This is pooled \ac{OLS}. It stacks all $NT$ observations and runs an ordinary regression as if the data were one large cross-section. The key maintained assumption would then be
+\[
+\E[v_{it}\mid x_{it}] = 0.
+\]
+But in panel settings this assumption is usually the first one to fail, because $v_{it}$ contains the unit effect $\alpha_i$.
+
+\paragraph{What pooled \ac{OLS} is really doing.}
+Pooled \ac{OLS} compares:
+\begin{itemize}
+\item one unit to another unit in the same period,
+\item the same unit to itself over time,
+\item and all mixtures of those two comparisons.
+\end{itemize}
+That is already a warning sign. If the cross-unit comparisons are contaminated by unobserved heterogeneity, then the pooled coefficient combines clean and contaminated sources of variation.
+
+\paragraph{A simple wage-panel example.}
+Let $y_{it}$ be log wages and $x_{it}$ be training hours. Suppose some workers are permanently more able, more motivated, or employed by better firms. Put all of that into $\alpha_i$. Then the model is
+\[
+y_{it} = \beta x_{it} + \alpha_i + u_{it}.
+\]
+Workers with high $\alpha_i$ may systematically choose more training. A pooled regression then compares high-training workers to low-training workers, but those workers differ not only in training, they also differ in latent ability. The pooled coefficient therefore blends the effect of training with the effect of ability.
+
+\paragraph{Bias from omitting the unit effect.}
+To isolate the main issue, suppress time effects or imagine they have been absorbed by period dummies:
+\begin{equation}
+y_{it} = \beta x_{it} + \alpha_i + u_{it}.
+\label{eq:scalar_pooled}
+\end{equation}
+
+\begin{thmN}[Probability limit of pooled \ac{OLS}]
+Consider the scalar model in \eqref{eq:scalar_pooled}. If $\Var(x_{it})>0$, then the pooled \ac{OLS} estimator satisfies
+\begin{equation}
+\plim \hat{\beta}^{POLS}
+= \beta + \frac{\Cov(x_{it},\alpha_i)}{\Var(x_{it})}
+      + \frac{\Cov(x_{it},u_{it})}{\Var(x_{it})}.
+\label{eq:pools_bias}
+\end{equation}
+In particular, even if $\Cov(x_{it},u_{it})=0$, pooled \ac{OLS} is inconsistent whenever $\Cov(x_{it},\alpha_i)\neq 0$.
+\end{thmN}
+
+\begin{proof}
+For a scalar regressor, the population regression coefficient from regressing $y_{it}$ on $x_{it}$ is
+\[
+\frac{\Cov(x_{it},y_{it})}{\Var(x_{it})}.
+\]
+Substituting \eqref{eq:scalar_pooled} into the numerator gives
+\begin{align*}
+\Cov(x_{it},y_{it})
+&= \Cov(x_{it},\beta x_{it}+\alpha_i+u_{it}) \\
+&= \beta \Var(x_{it}) + \Cov(x_{it},\alpha_i) + \Cov(x_{it},u_{it}).
+\end{align*}
+Dividing both sides by $\Var(x_{it})$ yields \eqref{eq:pools_bias}.
+\end{proof}
+
+The theorem is just omitted-variable bias written in panel notation. The omitted variable is $\alpha_i$, the permanent component of the unit. In many applications that omitted term contains exactly the economic object we worry about:
+\begin{itemize}
+\item worker ability in earnings equations,
+\item firm productivity in investment equations,
+\item patient severity in health-care use,
+\item municipality capacity in public-finance panels.
+\end{itemize}
+
+\paragraph{Why adding time dummies is not enough.}
+Students often think that adding period dummies already ``uses the panel structure.'' It does help with common time shocks $\lambda_t$, but it does nothing to remove permanent unit heterogeneity $\alpha_i$. A regression with year dummies but no unit dummies is still comparing different units with different latent traits.
+
+\paragraph{Pooled \ac{OLS} mixes between and within variation.}
+The deeper issue is not only omitted-variable bias. It is also that pooled \ac{OLS} uses the wrong source of variation for the question that panel data were meant to answer.
+
+For any variable $z_{it}$, write
+\[
+z_{it} = \bar{z}_i + (z_{it}-\bar{z}_i),
+\]
+where $\bar{z}_i$ is the unit mean. The first term is the between-unit component and the second term is the within-unit component.
+
+\begin{thmN}[Covariance decomposition in a balanced panel]
+For any two variables $x_{it}$ and $y_{it}$ observed in a balanced panel,
+\begin{equation}
+\Cov(x_{it},y_{it})
+= \Cov(\bar{x}_i,\bar{y}_i)
+  + \Cov(x_{it}-\bar{x}_i,\; y_{it}-\bar{y}_i).
+\label{eq:cov_decomposition}
+\end{equation}
+\end{thmN}
+
+\begin{proof}
+Write
+\[
+x_{it} = \bar{x}_i + \tilde{x}_{it},
+\qquad
+y_{it} = \bar{y}_i + \tilde{y}_{it},
+\]
+where $\tilde{x}_{it}=x_{it}-\bar{x}_i$ and $\tilde{y}_{it}=y_{it}-\bar{y}_i$. Then
+\begin{align*}
+\Cov(x_{it},y_{it})
+&= \Cov(\bar{x}_i+\tilde{x}_{it},\bar{y}_i+\tilde{y}_{it}) \\
+&= \Cov(\bar{x}_i,\bar{y}_i)
+ + \Cov(\bar{x}_i,\tilde{y}_{it})
+ + \Cov(\tilde{x}_{it},\bar{y}_i)
+ + \Cov(\tilde{x}_{it},\tilde{y}_{it}).
+\end{align*}
+It remains to show that the two cross terms are zero. Because $\bar{x}_i$ is constant over $t$ within unit,
+\[
+\Cov(\bar{x}_i,\tilde{y}_{it})
+= \E[\bar{x}_i\tilde{y}_{it}] - \E[\bar{x}_i]\E[\tilde{y}_{it}].
+\]
+Now
+\[
+\E[\bar{x}_i\tilde{y}_{it}]
+= \E\!\left[\bar{x}_i \cdot \frac{1}{T}\sum_{t=1}^T (y_{it}-\bar{y}_i)\right]
+= 0
+\]
+because $\sum_{t=1}^T (y_{it}-\bar{y}_i)=0$ for every unit. Also $\E[\tilde{y}_{it}]=0$. Hence $\Cov(\bar{x}_i,\tilde{y}_{it})=0$. The same argument shows $\Cov(\tilde{x}_{it},\bar{y}_i)=0$. Substituting back proves \eqref{eq:cov_decomposition}.
+\end{proof}
+
+Equation \eqref{eq:cov_decomposition} is extremely informative. It says that the sample covariance behind pooled \ac{OLS} has two pieces:
+\begin{enumerate}
+\item a \textbf{between} covariance, comparing average outcomes of high-$x$ units to average outcomes of low-$x$ units;
+\item a \textbf{within} covariance, comparing a unit to its own time average.
+\end{enumerate}
+If the between component is contaminated by correlation between $\bar{x}_i$ and $\alpha_i$, pooled \ac{OLS} is pulled away from the within-unit relationship. So even when panel data are available, pooled \ac{OLS} often answers the wrong empirical question.
+
+\paragraph{A two-worker illustration.}
+Suppose worker A has high ability and worker B has low ability. Assume training has no causal effect at all, so the true $\beta$ is zero. But worker A always takes more training and always earns higher wages because of ability. Then a pooled regression will likely estimate a positive relationship between training and wages, even though training is causally irrelevant in this simple story. The regression is not detecting the effect of training. It is detecting that training is more common among high-ability workers.
+
+Now imagine that worker A receives extra training in period 2 while her ability stays fixed. If her wage does not change, the within-worker evidence says the causal effect is close to zero. This is exactly why fixed effects focus on changes within the same unit rather than differences across units.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Pooled \ac{OLS} is not merely ``less sophisticated'' than fixed effects. It answers a different question. It combines cross-unit comparisons with within-unit comparisons, and the cross-unit part is often the least credible part in observational data.
+\end{boxD}
+
+\paragraph{What pooled \ac{OLS} can still be useful for.}
+There are cases where pooled \ac{OLS} is informative:
+\begin{itemize}
+\item if $\alpha_i$ is genuinely uncorrelated with the regressors,
+\item if the goal is purely descriptive rather than causal,
+\item if the panel dimension is very short and within variation is almost absent.
+\end{itemize}
+But in most applied panel settings, especially when the objective is causal interpretation, one should begin from the presumption that $\alpha_i$ may be correlated with $x_{it}$.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Adding many observable controls to pooled \ac{OLS} does not generally neutralize latent unit heterogeneity. If the remaining unobserved component is still correlated with $x_{it}$, the pooled estimate remains biased.
+\end{boxF}
+
+\subsection{Fixed Effects as Within-Unit Identification}
+Fixed effects solve the omitted-unit-effect problem by changing the comparison. Instead of asking whether high-$x$ units tend to have high $y$, fixed effects ask whether a given unit tends to have high $y$ in the periods when that same unit has high $x$.
+
+\paragraph{The core identification idea.}
+Return to the static model without time effects:
+\begin{equation}
+y_{it} = x_{it}'\beta + \alpha_i + u_{it}.
+\label{eq:fe_base}
+\end{equation}
+The key maintained restriction is not that units are identical. It is the weaker and more plausible statement that the omitted heterogeneity is \emph{time-invariant}. If $\alpha_i$ does not move over time, then we can eliminate it by subtracting out a unit-specific baseline.
+
+\paragraph{Dummy-variable view.}
+One way to do that is to include a full set of unit indicators:
+\begin{equation}
+y_{it} = x_{it}'\beta + \sum_{j=1}^{N-1}\delta_j 1\{i=j\} + u_{it}.
+\label{eq:lsdv}
+\end{equation}
+This is the least-squares dummy-variable representation. It is conceptually transparent: every unit gets its own intercept. In practice it can be cumbersome when $N$ is large, but modern software handles it easily.
+
+\paragraph{Within-transformation view.}
+The same estimator can be derived with more revealing algebra. Take the time average of \eqref{eq:fe_base} for unit $i$:
+\begin{equation}
+\bar{y}_i = \bar{x}_i'\beta + \alpha_i + \bar{u}_i.
+\label{eq:time_avg}
+\end{equation}
+Now subtract \eqref{eq:time_avg} from \eqref{eq:fe_base}:
+\begin{equation}
+y_{it}-\bar{y}_i = (x_{it}-\bar{x}_i)'\beta + (u_{it}-\bar{u}_i).
+\label{eq:within}
+\end{equation}
+The unit effect disappears because $\alpha_i-\alpha_i=0$.
+
+Define the demeaned variables
+\[
+\ddot{y}_{it} = y_{it}-\bar{y}_i,
+\qquad
+\ddot{x}_{it} = x_{it}-\bar{x}_i,
+\qquad
+\ddot{u}_{it} = u_{it}-\bar{u}_i.
+\]
+Then the transformed regression is
+\begin{equation}
+\ddot{y}_{it} = \ddot{x}_{it}'\beta + \ddot{u}_{it}.
+\label{eq:fe_reg}
+\end{equation}
+Applying \ac{OLS} to \eqref{eq:fe_reg} gives
+\begin{equation}
+\hat{\beta}^{FE}
+=
+\left(\sum_{i=1}^N \sum_{t=1}^T \ddot{x}_{it}\ddot{x}_{it}'\right)^{-1}
+\left(\sum_{i=1}^N \sum_{t=1}^T \ddot{x}_{it}\ddot{y}_{it}\right).
+\label{eq:fe_estimator}
+\end{equation}
+
+\paragraph{What this estimator means.}
+Equation \eqref{eq:fe_estimator} makes the identification strategy explicit. Fixed effects use only deviations from a unit's own average:
+\begin{itemize}
+\item if a regressor is above its unit mean in some period, fixed effects ask whether the outcome is also above its unit mean in that period;
+\item if a regressor never moves within a unit, that unit contributes no identifying information for that regressor.
+\end{itemize}
+This is why fixed effects are also called the \emph{within estimator}.
+
+\begin{boxD}
+\textbf{Why this matters.}
+The fixed-effects regression answers a disciplined question: when the same unit changes $x_{it}$, how does $y_{it}$ change relative to that unit's own baseline? In many applications this is the economically relevant comparison.
+\end{boxD}
+
+\paragraph{A useful picture to keep in mind.}
+Imagine each unit has its own horizontal reference line equal to its average outcome. Fixed effects ask whether periods in which $x_{it}$ is above the unit's usual level are also periods in which $y_{it}$ is above the unit's usual level. The regression is therefore built out of vertical distances from each unit's own mean, not from the overall sample mean.
+
+\begin{thmN}[Least-squares dummy variables and within estimation are equivalent]
+In the static model \eqref{eq:fe_base}, the coefficient on $x_{it}$ obtained from the dummy-variable regression \eqref{eq:lsdv} is identical to the coefficient obtained from the demeaned regression \eqref{eq:fe_reg}.
+\end{thmN}
+
+\begin{proof}
+Consider the least-squares problem
+\[
+\min_{\beta,\alpha_1,\ldots,\alpha_N}
+\sum_{i=1}^N \sum_{t=1}^T
+\left(y_{it}-x_{it}'\beta-\alpha_i\right)^2.
+\]
+For a fixed value of $\beta$, differentiate with respect to $\alpha_i$:
+\[
+\frac{\partial}{\partial \alpha_i}
+\sum_{t=1}^T \left(y_{it}-x_{it}'\beta-\alpha_i\right)^2
+= -2\sum_{t=1}^T \left(y_{it}-x_{it}'\beta-\alpha_i\right).
+\]
+Setting this derivative equal to zero yields
+\[
+\hat{\alpha}_i(\beta)=\bar{y}_i-\bar{x}_i'\beta.
+\]
+Substituting this back into the objective function gives the concentrated least-squares problem
+\[
+\min_{\beta}
+\sum_{i=1}^N \sum_{t=1}^T
+\left[(y_{it}-\bar{y}_i) - (x_{it}-\bar{x}_i)'\beta\right]^2.
+\]
+But this is exactly the \ac{OLS} criterion from regressing $\ddot{y}_{it}$ on $\ddot{x}_{it}$. Therefore the slope coefficient from the dummy-variable regression is identical to the slope coefficient from the demeaned regression.
+\end{proof}
+
+This equivalence matters because it gives us two interpretations at once:
+\begin{itemize}
+\item \textbf{Economically:} each unit has its own intercept.
+\item \textbf{Statistically:} we identify $\beta$ from within-unit covariation only.
+\end{itemize}
+
+\paragraph{Why time-invariant regressors disappear.}
+Suppose $z_i$ does not vary over time. Then
+\[
+z_i-\bar{z}_i=0.
+\]
+So a fixed-effects regression cannot estimate the effect of regressors such as gender, inherited geography, colonial origin, or any other variable that is constant within unit over the sample.
+
+This is not a flaw in the method. It is the arithmetic consequence of the identifying idea. If a regressor never changes within a unit, there is no within-unit comparison to exploit.
+
+\paragraph{Fixed effects need within variation.}
+The previous point has an important practical implication. A regressor may have a great deal of cross-sectional variation but very little within-unit movement. In that case the pooled regression may look precise while the fixed-effects estimate is imprecise. The reason is not a software problem. The reason is that the data contain little of the variation that fixed effects require.
+
+\begin{boxF}
+\textbf{Common mistake.}
+A fixed-effects coefficient is not a cross-sectional comparison with many controls. It is a within-unit estimate. If there is almost no within-unit movement in a regressor, the fixed-effects estimate will be noisy no matter how large the pooled sample is.
+\end{boxF}
+
+\paragraph{Consistency of fixed effects under strict exogeneity.}
+The transformed equation \eqref{eq:fe_reg} has removed $\alpha_i$, but we still need the transformed regressor to be uncorrelated with the transformed error. This is where strict exogeneity enters:
+\[
+\E[u_{it}\mid \alpha_i, x_{i1},\ldots,x_{iT}] = 0
+\qquad \text{for each } t.
+\]
+
+\begin{thmN}[Orthogonality behind fixed effects]
+Under strict exogeneity and finite second moments,
+\begin{equation}
+\E[\ddot{x}_{it}\ddot{u}_{it}] = 0
+\qquad \text{for each } t.
+\label{eq:fe_orthogonality}
+\end{equation}
+Consequently, if the matrix $\E[\ddot{x}_{it}\ddot{x}_{it}']$ is nonsingular, the fixed-effects estimator is consistent as $N\to\infty$ with fixed $T$.
+\end{thmN}
+
+\begin{proof}
+Because $\ddot{x}_{it}$ is a function of the full regressor path $(x_{i1},\ldots,x_{iT})$,
+\[
+\E[\ddot{x}_{it}u_{is}]
+= \E\!\left[\ddot{x}_{it}\E[u_{is}\mid \alpha_i,x_{i1},\ldots,x_{iT}]\right] = 0
+\]
+for every $s=1,\ldots,T$ by strict exogeneity. Therefore
+\[
+\E[\ddot{x}_{it}\bar{u}_i]
+= \frac{1}{T}\sum_{s=1}^T \E[\ddot{x}_{it}u_{is}] = 0.
+\]
+Taking $s=t$ also gives $\E[\ddot{x}_{it}u_{it}]=0$. Hence
+\[
+\E[\ddot{x}_{it}\ddot{u}_{it}]
+= \E[\ddot{x}_{it}(u_{it}-\bar{u}_i)]
+= \E[\ddot{x}_{it}u_{it}] - \E[\ddot{x}_{it}\bar{u}_i]
+= 0.
+\]
+This establishes the moment condition in \eqref{eq:fe_orthogonality}. Standard law-of-large-numbers arguments then imply consistency of \eqref{eq:fe_estimator} when the within second-moment matrix is nonsingular.
+\end{proof}
+
+\paragraph{Why strict exogeneity is stronger than students first think.}
+The condition above rules out feedback from shocks to future regressors. For example, if a good productivity shock today causes a firm to invest more tomorrow, then current $u_{it}$ is correlated with future $x_{i,t+1}$. In that case the fixed-effects estimator in the static model is generally not valid without further structure.
+
+\paragraph{A simple interpretation with one regressor.}
+When $x_{it}$ is scalar, the fixed-effects estimator can be written as
+\[
+\hat{\beta}^{FE}
+=
+\frac{\sum_{i=1}^N \sum_{t=1}^T (x_{it}-\bar{x}_i)(y_{it}-\bar{y}_i)}
+{\sum_{i=1}^N \sum_{t=1}^T (x_{it}-\bar{x}_i)^2}.
+\]
+So $\hat{\beta}^{FE}$ is just the slope from regressing the within-unit deviations of $y$ on the within-unit deviations of $x$. This formula is often the best one to keep in mind.
+
+\paragraph{A concrete example.}
+Suppose we follow students across semesters and study the effect of study hours on grades. Some students are permanently stronger than others, more organized, or have better prior preparation. Those factors belong in $\alpha_i$. Fixed effects remove those permanent student traits and estimate the relationship between \emph{changes} in study hours and \emph{changes} in grades for the same student. If Alice always studies more than Bob because she is more disciplined, that permanent difference no longer drives the estimate.
+
+\paragraph{What fixed effects do and do not solve.}
+Fixed effects are powerful, but their scope is exact:
+\begin{itemize}
+\item they remove omitted variables that are constant within unit over time;
+\item they do not remove omitted variables that change over time within unit;
+\item they do not solve reverse causality by themselves;
+\item they do not solve measurement error by themselves.
+\end{itemize}
+So the move from pooled \ac{OLS} to fixed effects is a major improvement, but it is not the end of econometric thinking.
+
+\subsection{First Differences Versus Fixed Effects}
+Fixed effects and first differences are close relatives. Both methods start from the same unobserved-effects model,
+\begin{equation}
+y_{it} = x_{it}'\beta + \alpha_i + u_{it},
+\label{eq:fdfe_base}
+\end{equation}
+and both remove the time-invariant unit effect $\alpha_i$. The difference lies in \emph{how} they remove it and therefore in \emph{what weighting of the time dimension} they use.
+
+\paragraph{The first-difference transformation.}
+Take the difference between period $t$ and period $t-1$:
+\begin{equation}
+\Delta y_{it} = \Delta x_{it}'\beta + \Delta u_{it},
+\qquad t=2,\dots,T,
+\label{eq:fd}
+\end{equation}
+where
+\[
+\Delta y_{it}=y_{it}-y_{i,t-1},
+\qquad
+\Delta x_{it}=x_{it}-x_{i,t-1},
+\qquad
+\Delta u_{it}=u_{it}-u_{i,t-1}.
+\]
+The unit effect disappears because $\alpha_i-\alpha_i=0$. Algebraically, first differencing is therefore as valid a way to remove $\alpha_i$ as demeaning.
+
+\paragraph{The identification idea is still within-unit.}
+Equation \eqref{eq:fd} says that the slope $\beta$ is identified from \emph{changes} within a unit. If a firm's leverage rises from one year to the next, first differences ask whether investment also rises from one year to the next, net of the permanent firm-specific component. The comparison is therefore local in time: today versus yesterday, or this year versus last year.
+
+\paragraph{How first differencing differs conceptually from fixed effects.}
+The within estimator compares each observation to the unit's average over the whole sample. First differencing compares each observation only to the immediately preceding observation. That difference sounds small, but it matters.
+\begin{itemize}
+\item \textbf{Fixed effects} ask whether a period is above or below the unit's long-run average.
+\item \textbf{First differences} ask whether the variable rose or fell relative to the previous period.
+\end{itemize}
+So the two estimators use the same broad source of variation, but they filter that variation differently.
+
+\begin{exmp}
+\label{ex:fd_fe_intuition}
+Suppose $y_{it}$ is a student's grade and $x_{it}$ is study hours across four semesters. Fixed effects compare each semester to the student's average semester. First differences compare semester 2 to semester 1, semester 3 to semester 2, and semester 4 to semester 3. If the student gradually becomes more mature or more efficient at studying, those nearby comparisons may feel more natural than comparing every semester to the overall mean. But if each semester contains a lot of short-run noise, differencing can also make the data noisier.
+\end{exmp}
+
+\paragraph{Moment condition for first differences.}
+The first-difference estimator is obtained by applying \ac{OLS} to \eqref{eq:fd}. In the scalar-regressor case,
+\begin{equation}
+\hat{\beta}^{FD}
+=
+\frac{\sum_{i=1}^N \sum_{t=2}^T \Delta x_{it}\Delta y_{it}}
+{\sum_{i=1}^N \sum_{t=2}^T (\Delta x_{it})^2}.
+\label{eq:fd_estimator}
+\end{equation}
+Under the standard static-panel strict-exogeneity condition,
+\[
+\E[u_{it}\mid \alpha_i,x_{i1},\ldots,x_{iT}] = 0
+\qquad \text{for each } t,
+\]
+we also have
+\[
+\E[\Delta x_{it}\Delta u_{it}] = 0.
+\]
+The logic is the same as with fixed effects: because $\Delta x_{it}$ is a function of the regressor path $(x_{i1},\ldots,x_{iT})$, strict exogeneity implies orthogonality between the transformed regressor and the transformed error.
+
+\begin{thmN}[Fixed effects and first differences are identical when $T=2$]
+In the model \eqref{eq:fdfe_base}, suppose every unit is observed in exactly two periods. Then the fixed-effects estimator and the first-difference estimator produce the same slope coefficient.
+\label{thm:fe_fd_t2}
+\end{thmN}
+
+\begin{proof}
+When $T=2$,
+\[
+\bar{y}_i = \frac{y_{i1}+y_{i2}}{2}
+\qquad \text{and} \qquad
+\bar{x}_i = \frac{x_{i1}+x_{i2}}{2}.
+\]
+Therefore,
+\[
+y_{i2}-\bar{y}_i = \frac{y_{i2}-y_{i1}}{2}=\frac{\Delta y_{i2}}{2},
+\qquad
+y_{i1}-\bar{y}_i = -\frac{y_{i2}-y_{i1}}{2}=-\frac{\Delta y_{i2}}{2}.
+\]
+The same identities hold for $x_{it}$:
+\[
+x_{i2}-\bar{x}_i = \frac{\Delta x_{i2}}{2},
+\qquad
+x_{i1}-\bar{x}_i = -\frac{\Delta x_{i2}}{2}.
+\]
+Hence every demeaned observation is just a constant multiple of the corresponding differenced observation. In the fixed-effects formula, both the numerator and denominator are therefore multiplied by the same constant factor relative to the first-difference formula. The slope coefficients are identical.
+\end{proof}
+
+The theorem is worth remembering because it tells us something deeper than a special-case identity. With only two periods, there is essentially just \emph{one within-unit movement} available. Fixed effects and first differences are merely two notational ways of extracting it.
+
+\paragraph{Why the estimators differ once $T>2$.}
+For more than two periods, the equality in Theorem \ref{thm:fe_fd_t2} no longer holds. The reason is that the within transformation uses all periods simultaneously, whereas first differencing uses only adjacent comparisons. For $T=4$, for example,
+\[
+y_{i3}-\bar{y}_i
+\]
+depends on all four observations for unit $i$, while
+\[
+\Delta y_{i3}=y_{i3}-y_{i2}
+\]
+depends only on periods 2 and 3. The two filters therefore react differently to trends, persistence, and measurement noise.
+
+\begin{thmN}[Differenced errors are mechanically serially correlated]
+Suppose the idiosyncratic errors $u_{it}$ are serially uncorrelated with variance $\sigma_u^2$. Then the differenced errors satisfy
+\begin{align}
+\Var(\Delta u_{it}) &= 2\sigma_u^2,
+\label{eq:fd_var}
+\\
+\Cov(\Delta u_{it},\Delta u_{i,t-1}) &= -\sigma_u^2,
+\label{eq:fd_cov_adjacent}
+\\
+\Cov(\Delta u_{it},\Delta u_{is}) &= 0
+\qquad \text{if } |t-s|>1.
+\label{eq:fd_cov_nonadjacent}
+\end{align}
+\end{thmN}
+
+\begin{proof}
+Because $\Delta u_{it}=u_{it}-u_{i,t-1}$,
+\begin{align*}
+\Var(\Delta u_{it})
+&= \Var(u_{it})+\Var(u_{i,t-1})-2\Cov(u_{it},u_{i,t-1}) \\
+&= \sigma_u^2+\sigma_u^2-0
+=2\sigma_u^2.
+\end{align*}
+For adjacent differenced errors,
+\begin{align*}
+\Cov(\Delta u_{it},\Delta u_{i,t-1})
+&= \Cov(u_{it}-u_{i,t-1},u_{i,t-1}-u_{i,t-2}) \\
+&= \Cov(u_{it},u_{i,t-1})-\Cov(u_{it},u_{i,t-2}) \\
+&\quad -\Var(u_{i,t-1})+\Cov(u_{i,t-1},u_{i,t-2}) \\
+&= -\sigma_u^2,
+\end{align*}
+using serial uncorrelatedness. If $|t-s|>1$, the two differences share no common $u$ term, so every covariance term is zero.
+\end{proof}
+
+This theorem explains an important practical point. Even when the original disturbances are serially independent, the differenced disturbances are not. Adjacent differenced residuals are negatively correlated because $u_{i,t-1}$ enters once with a minus sign and once with a plus sign. That is one reason why inference in first-difference regressions should still be clustered at the unit level.
+
+\paragraph{Efficiency intuition.}
+There is no universal ranking of fixed effects and first differences. The comparison depends on the error process.
+\begin{itemize}
+\item If $u_{it}$ is roughly serially uncorrelated, fixed effects often uses the information more efficiently because it averages against the full unit mean rather than only one neighboring period.
+\item If $u_{it}$ has a strong random-walk or highly persistent component, differencing can be appealing because nearby comparisons remove that low-frequency noise more aggressively.
+\end{itemize}
+In short, fixed effects is often a good default in static panels, but first differences can be attractive when the economics suggests that change-from-last-period is the natural object.
+
+\paragraph{Measurement error and why differencing can hurt.}
+Suppose the observed regressor is measured with classical error:
+\[
+x_{it}^{obs}=x_{it}^{\ast}+\nu_{it},
+\qquad
+\E[\nu_{it}\mid x_{it}^{\ast},\alpha_i,u_{it}]=0.
+\]
+Then
+\begin{equation}
+\Delta x_{it}^{obs}
+= \Delta x_{it}^{\ast} + (\nu_{it}-\nu_{i,t-1}).
+\label{eq:fd_me}
+\end{equation}
+Equation \eqref{eq:fd_me} is the key warning. If $\nu_{it}$ is transitory, the noise term in differences contains \emph{two} measurement-error draws. So the signal-to-noise ratio can deteriorate sharply after differencing. Fixed effects also suffers from measurement error, but first differencing is often more fragile when the observed regressor is already noisy.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Students sometimes think first differencing is automatically ``safer'' because it looks more local. But locality is not the same as efficiency. If the regressor is noisy, differencing may turn a manageable measurement-error problem into a severe attenuation-bias problem.
+\end{boxF}
+
+\paragraph{Trends and interpretation.}
+First differences are especially natural when the substantive question is itself about changes. For example:
+\begin{itemize}
+\item How does \emph{growth} in income respond to \emph{growth} in credit?
+\item How does the \emph{change} in pollution respond to a new environmental regulation?
+\item How does the year-to-year \emph{change} in employment respond to a tax change?
+\end{itemize}
+In such cases, the differenced equation is not just an econometric device; it can also match the economics of the problem.
+
+\paragraph{A balanced way to compare the two estimators.}
+For introductory work, the safest summary is:
+\begin{enumerate}
+\item Both FE and FD eliminate time-invariant unit heterogeneity.
+\item FE uses deviations from the unit mean; FD uses period-to-period changes.
+\item FE and FD are identical when $T=2$.
+\item For $T>2$, neither estimator dominates in all environments.
+\item The choice should be guided by the likely serial correlation of $u_{it}$, the quality of measurement of $x_{it}$, and the economic meaning of ``within-unit variation'' in the application.
+\end{enumerate}
+
+\begin{boxD}
+\textbf{Why this matters.}
+Fixed effects and first differences are alternative filters, not universal ranking devices. The sensible choice depends on what kind of within-unit comparison is economically persuasive and on how the noise behaves in the data.
+\end{boxD}
+
+\subsection{Two-Way Fixed Effects}
+Unit effects solve one problem: permanent differences across units. But many empirical settings face a second problem at the same time. Some shocks are common across all units in a given period. Inflation, national legislation, macroeconomic booms and recessions, commodity-price cycles, and countrywide changes in financial conditions can all move the outcome and the regressors together. If those common shocks are omitted, one-way fixed effects are not enough.
+
+\paragraph{The two-way specification.}
+That motivates the two-way fixed-effects model:
+\begin{equation}
+y_{it} = x_{it}'\beta + \alpha_i + \lambda_t + u_{it}.
+\label{eq:twfe}
+\end{equation}
+Here
+\begin{itemize}
+\item $\alpha_i$ absorbs time-invariant differences across units;
+\item $\lambda_t$ absorbs shocks common to all units in period $t$;
+\item $u_{it}$ contains the remaining unit-time-specific disturbance.
+\end{itemize}
+The identifying variation is therefore narrower than in the one-way fixed-effects model. We no longer compare a unit merely to its own long-run mean. We compare the unit to its own mean \emph{and} net out the period-specific mean movement that is shared by everyone else.
+
+\paragraph{Why time effects matter economically.}
+Suppose we regress firm investment on cash flow. In a boom year, many firms simultaneously experience higher sales, higher cash flow, and higher investment. One-way fixed effects remove permanent differences across firms, but they do not remove the boom itself. Without time effects, the regression can mistake a common macro shock for a firm-level cash-flow effect. The role of $\lambda_t$ is to block exactly that channel.
+
+\begin{boxD}
+\textbf{Why this matters.}
+One-way fixed effects answer: how does a unit differ from its own average? Two-way fixed effects answer a stricter question: how does a unit differ from its own average \emph{after removing what was common to everyone in that period}? That is often the relevant comparison in macro-sensitive panels.
+\end{boxD}
+
+\paragraph{The double-demeaning transformation.}
+For a balanced panel, define
+\[
+\bar{y}_i = \frac{1}{T}\sum_{t=1}^T y_{it},
+\qquad
+\bar{y}_t = \frac{1}{N}\sum_{i=1}^N y_{it},
+\qquad
+\bar{y} = \frac{1}{NT}\sum_{i=1}^N \sum_{t=1}^T y_{it},
+\]
+and analogously for $x_{it}$ and $u_{it}$. The two-way within transformation is
+\begin{equation}
+\tilde{y}_{it}=y_{it}-\bar{y}_i-\bar{y}_t+\bar{y},
+\qquad
+\tilde{x}_{it}=x_{it}-\bar{x}_i-\bar{x}_t+\bar{x}.
+\label{eq:twfe_transform}
+\end{equation}
+This is often called \emph{double demeaning}. The first subtraction removes the unit mean, the second removes the time mean, and adding back the grand mean avoids subtracting the overall level twice.
+
+\begin{thmN}[Double demeaning removes additive unit and time effects]
+Consider the balanced-panel model \eqref{eq:twfe}. Then the transformed variables in \eqref{eq:twfe_transform} satisfy
+\begin{equation}
+\tilde{y}_{it} = \tilde{x}_{it}'\beta + \tilde{u}_{it},
+\label{eq:twfe_transformed_reg}
+\end{equation}
+where
+\[
+\tilde{u}_{it}=u_{it}-\bar{u}_i-\bar{u}_t+\bar{u}.
+\]
+In particular, the additive components $\alpha_i$ and $\lambda_t$ disappear from the transformed regression.
+\label{thm:double_demean}
+\end{thmN}
+
+\begin{proof}
+Take the unit mean of \eqref{eq:twfe}:
+\[
+\bar{y}_i = \bar{x}_i'\beta + \alpha_i + \bar{\lambda} + \bar{u}_i,
+\]
+where $\bar{\lambda}=T^{-1}\sum_{t=1}^T \lambda_t$. Take the time mean:
+\[
+\bar{y}_t = \bar{x}_t'\beta + \bar{\alpha} + \lambda_t + \bar{u}_t,
+\]
+where $\bar{\alpha}=N^{-1}\sum_{i=1}^N \alpha_i$. Finally, take the grand mean:
+\[
+\bar{y} = \bar{x}'\beta + \bar{\alpha} + \bar{\lambda} + \bar{u}.
+\]
+Now subtract the unit mean and time mean from \eqref{eq:twfe} and add back the grand mean:
+\begin{align*}
+y_{it}-\bar{y}_i-\bar{y}_t+\bar{y}
+&=
+(x_{it}-\bar{x}_i-\bar{x}_t+\bar{x})'\beta \\
+&\quad +(\alpha_i-\alpha_i-\bar{\alpha}+\bar{\alpha}) \\
+&\quad +(\lambda_t-\bar{\lambda}-\lambda_t+\bar{\lambda}) \\
+&\quad +(u_{it}-\bar{u}_i-\bar{u}_t+\bar{u}).
+\end{align*}
+The $\alpha_i$ and $\lambda_t$ terms cancel exactly, yielding \eqref{eq:twfe_transformed_reg}.
+\end{proof}
+
+The theorem gives the algebra, but the interpretation is the real payoff. A regressor matters in a two-way fixed-effects regression only to the extent that it varies \emph{within unit over time} and also differs from the aggregate movement in that same period.
+
+\paragraph{What variation is left after two-way fixed effects?}
+It helps to read \eqref{eq:twfe_transform} verbally. The transformed regressor
+\[
+\tilde{x}_{it}=x_{it}-\bar{x}_i-\bar{x}_t+\bar{x}
+\]
+is the part of $x_{it}$ that is:
+\begin{enumerate}
+\item not explained by the unit's average level;
+\item not explained by the period's average level;
+\item centered back around the overall grand mean.
+\end{enumerate}
+So if every unit experiences the same increase in $x$ in a given year, that common increase is absorbed by $\lambda_t$ and contributes nothing to identification.
+
+\begin{thmN}[Regressors with only unit or only time variation are not identified]
+Under two-way fixed effects, any regressor of the form
+\[
+x_{it} = a_i + b_t
+\]
+has transformed value $\tilde{x}_{it}=0$ for all $(i,t)$. Consequently, its slope coefficient is not separately identified in the two-way fixed-effects regression.
+\label{thm:twfe_unidentified}
+\end{thmN}
+
+\begin{proof}
+If $x_{it}=a_i+b_t$, then
+\[
+\bar{x}_i = a_i + \bar{b},
+\qquad
+\bar{x}_t = \bar{a} + b_t,
+\qquad
+\bar{x} = \bar{a}+\bar{b}.
+\]
+Substituting into \eqref{eq:twfe_transform},
+\begin{align*}
+\tilde{x}_{it}
+&= (a_i+b_t) - (a_i+\bar{b}) - (\bar{a}+b_t) + (\bar{a}+\bar{b}) \\
+&= 0.
+\end{align*}
+Therefore such a regressor is perfectly collinear with the additive unit and time effects and cannot be estimated separately.
+\end{proof}
+
+This theorem bundles together several facts that students often memorize separately:
+\begin{itemize}
+\item time-invariant regressors, such as gender or soil quality, are absorbed by unit fixed effects;
+\item purely aggregate regressors, such as a national interest rate that is identical for all units in a given year, are absorbed by time effects;
+\item only regressors with \emph{idiosyncratic within-unit and within-time-cell variation} survive both sweeps.
+\end{itemize}
+
+\begin{exmp}
+Suppose $x_{it}$ is the statutory national minimum wage and the sample consists of regions within a single country. In a given year, the national minimum wage is the same for every region. Once year dummies are included, this regressor has no cross-regional variation left within that year, so its direct coefficient is not identified in a standard regional two-way fixed-effects regression. To estimate an effect, one would need differential exposure across regions, for example an interaction between the national policy and each region's pre-existing share of low-wage workers.
+\end{exmp}
+
+\paragraph{A useful way to visualize two-way fixed effects.}
+Imagine a table with units in rows and years in columns. One-way fixed effects subtract the row means. Time effects subtract the column means. Two-way fixed effects keep only the part of each cell that remains after both sweeps. In that sense, the estimator works with deviations from the row pattern and from the column pattern at the same time.
+
+\paragraph{Orthogonality condition.}
+The natural strict-exogeneity condition for two-way fixed effects is
+\begin{equation}
+\E[u_{it}\mid \alpha_i,\lambda_1,\ldots,\lambda_T,x_{i1},\ldots,x_{iT}] = 0
+\qquad \text{for each } t.
+\label{eq:twfe_strict_exogeneity}
+\end{equation}
+Under \eqref{eq:twfe_strict_exogeneity}, the transformed regressor $\tilde{x}_{it}$ is orthogonal to the transformed error $\tilde{u}_{it}$. The coefficient $\beta$ is then identified from the residualized variation left after removing both kinds of additive heterogeneity.
+
+\paragraph{What two-way fixed effects do not solve.}
+Two-way fixed effects are powerful, but the scope of the correction is exact. They remove:
+\begin{itemize}
+\item time-invariant unit heterogeneity, through $\alpha_i$;
+\item period-specific common shocks, through $\lambda_t$.
+\end{itemize}
+They do \emph{not} remove:
+\begin{itemize}
+\item unit-specific shocks that vary over time,
+\item omitted variables that evolve differently across units,
+\item feedback from outcomes or shocks to future regressors,
+\item treatment-effect heterogeneity problems in staggered-adoption designs.
+\end{itemize}
+So two-way fixed effects is best viewed as a sharper additive-control strategy, not as a universal causal design.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Unit fixed effects do not absorb aggregate time shocks, and time fixed effects do not absorb unit-specific time-varying confounders. Two-way fixed effects removes only the additive combination of permanent unit heterogeneity and common period shocks.
+\end{boxF}
+
+\paragraph{Why this section matters for later lecture topics.}
+Two-way fixed effects is not just another regression specification. It is the backbone of many empirical designs students will meet later, especially difference-in-differences and event studies. Understanding exactly what is absorbed, what variation remains, and what assumptions are still needed is therefore essential before moving to modern causal panel methods.
+
+\subsection{Inference and Clustering}
+Estimation asks which variation identifies $\beta$. Inference asks how variable $\hat{\beta}$ is across repeated samples. In panel data those are distinct problems because rows from the same unit are rarely independent over time. After pooling, demeaning, differencing, or adding time effects, the \ac{OLS} variance still has the generic form
+\begin{equation}
+\Var(\hat{\beta}\mid X^{\ast})
+=
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}
+X^{\ast\prime}\Omega X^{\ast}
+\left(X^{\ast\prime}X^{\ast}\right)^{-1},
+\label{eq:general_panel_var}
+\end{equation}
+where $\Omega$ is the covariance matrix of the transformed disturbances. The entire inference problem is therefore a question about the structure of $\Omega$.
+
+If units are independent of one another but errors may be arbitrarily correlated within unit, then the natural variance estimator is cluster-robust. Writing the transformed regression for unit $i$ as
+\[
+y_i^{\ast}=X_i^{\ast}\beta+u_i^{\ast},
+\]
+the cluster-robust variance estimator is
+\begin{equation}
+\widehat{\Var}(\hat{\beta})
+=
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}
+\left(\sum_{i=1}^N X_i^{\ast\prime}\hat{u}_i^{\ast}\hat{u}_i^{\ast\prime}X_i^{\ast}\right)
+\left(X^{\ast\prime}X^{\ast}\right)^{-1}.
+\label{eq:cluster}
+\end{equation}
+Relative to ordinary heteroskedasticity-robust errors, the only conceptual difference is crucial: clustering keeps the within-unit residual cross-products $\hat{u}_{it}\hat{u}_{is}$ for $t\neq s$ instead of forcing them to zero.
+
+Why are those cross-products so important? Because panel transformations themselves create dependence. We already saw this for first differences. The same logic holds for the within transformation.
+
+\begin{thmN}[Demeaned errors are mechanically correlated]
+Suppose $u_{it}$ is serially uncorrelated with mean zero and variance $\sigma_u^2$, and define
+\[
+\ddot{u}_{it}=u_{it}-\bar{u}_i,
+\qquad
+\bar{u}_i=\frac{1}{T}\sum_{t=1}^T u_{it}.
+\]
+Then for $t\neq s$,
+\begin{align}
+\Var(\ddot{u}_{it}) &= \sigma_u^2\left(1-\frac{1}{T}\right),
+\label{eq:demeaned_var}
+\\
+\Cov(\ddot{u}_{it},\ddot{u}_{is}) &= -\frac{\sigma_u^2}{T}.
+\label{eq:demeaned_cov}
+\end{align}
+\label{thm:demeaned_corr}
+\end{thmN}
+
+\begin{proof}
+Because the original disturbances are serially uncorrelated,
+\[
+\Var(\bar{u}_i)=\Var\left(\frac{1}{T}\sum_{r=1}^T u_{ir}\right)=\frac{\sigma_u^2}{T}
+\qquad \text{and} \qquad
+\Cov(u_{it},\bar{u}_i)=\frac{\sigma_u^2}{T}.
+\]
+Therefore
+\[
+\Var(\ddot{u}_{it})
+=
+\Var(u_{it})+\Var(\bar{u}_i)-2\Cov(u_{it},\bar{u}_i)
+=
+\sigma_u^2\left(1-\frac{1}{T}\right).
+\]
+For $t\neq s$,
+\begin{align*}
+\Cov(\ddot{u}_{it},\ddot{u}_{is})
+&=
+\Cov(u_{it}-\bar{u}_i,u_{is}-\bar{u}_i) \\
+&=
+\Cov(u_{it},u_{is})-\Cov(u_{it},\bar{u}_i)-\Cov(u_{is},\bar{u}_i)+\Var(\bar{u}_i) \\
+&=
+0-\frac{\sigma_u^2}{T}-\frac{\sigma_u^2}{T}+\frac{\sigma_u^2}{T}
+=
+-\frac{\sigma_u^2}{T}.
+\end{align*}
+\end{proof}
+
+So even if the original shocks are independent over time, the within-transformed shocks are not. Fixed effects remove the mean component $\alpha_i$, but they do not generally deliver independent residuals. That is the algebraic reason clustering is typically the default in panel applications.
+
+\paragraph{Which level should be clustered?}
+Cluster along the dimension at which dependence plausibly remains. In a worker-year panel, that is often the worker. In a firm-quarter panel, often the firm. If shocks also comove across units within a given year, one may need time clustering or two-way clustering. A useful applied rule is that if treatment varies only at a coarse level, inference should usually respect that level. If a state policy is assigned at the state-year level, county-year observations inside the same state are not independent sources of policy variation.
+
+\paragraph{Few clusters.}
+Cluster asymptotics rely on the number of clusters, not on the number of rows. A dataset with $40{,}000$ observations but only $18$ state clusters is still primarily an $18$-cluster inference problem. With few clusters, conventional clustered $t$ statistics can over-reject. That is why good empirical work reports the number of clusters, uses cluster-based degrees-of-freedom adjustments, and in very small-cluster settings often turns to procedures such as the wild cluster bootstrap.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Reporting heteroskedasticity-robust standard errors without clustering in a panel is usually not a harmless shortcut. It often treats dependent observations as if they were independent and therefore overstates precision.
+\end{boxF}
+
+\subsection{Practical Diagnostics}
+Panel econometrics is not only about formulas. It is also about learning to diagnose where identification comes from and how much independent information supports it.
+
+\paragraph{Start with the source of variation.}
+Ask whether the coefficient is identified from between-unit differences, within-unit changes, or within-unit changes net of common time effects. If a regressor barely moves within unit, then a fixed-effects estimate may be imprecise even in a very large panel.
+
+\paragraph{Separate time effects from clustering.}
+Time fixed effects and clustered standard errors do different jobs. Time effects remove average shocks common to all units in a period. Clustering changes the variance estimate to allow remaining dependence. One is about bias from omitted aggregate shocks; the other is about correct uncertainty quantification. They are complements, not substitutes.
+
+\paragraph{Compare specifications economically, not mechanically.}
+Comparing pooled \ac{OLS}, FE, FD, and FE with time effects is informative because each estimator uses different variation. Large coefficient movements often reveal that between and within relationships are not the same, or that common time shocks are important. That is substantive information, not just a robustness ritual.
+
+\paragraph{Report the inferential design clearly.}
+An empirical table should tell the reader which fixed effects are included, along which dimension standard errors are clustered, and how many clusters there are. ``Robust standard errors'' is too vague in panel work.
+
+\paragraph{Use a short checklist.}
+Before trusting a panel estimate, ask:
+\begin{enumerate}
+\item What variation identifies the coefficient?
+\item Which observations may share shocks?
+\item How many independent clusters are there?
+\item Does the regressor move enough within units?
+\item Do the conclusions survive reasonable alternative fixed-effects and clustering choices?
+\end{enumerate}
+
+\begin{boxD}
+\textbf{Why this matters.}
+If a coefficient is significant with heteroskedasticity-robust errors but not with clustered errors, the right conclusion is not that clustering ``changed the result.'' The right conclusion is that the unclustered calculation was acting as if the panel contained more independent information than it really did.
+\end{boxD}
+
+\subsection{Lecture 1 R Companions}
+Lecture 1 is paired with small companion scripts in \texttt{lectures/code/panel-data/}. They are designed to isolate one idea at a time rather than bury the logic inside one long file.
+\begin{itemize}
+\item \texttt{01\_within\_between\_variation.R}: decomposes panel variation into overall, between-unit, and within-unit pieces.
+\item \texttt{02\_pooled\_ols\_vs\_fixed\_effects.R}: shows why pooled \ac{OLS} is biased when regressors are correlated with unit effects and verifies the equivalence of least-squares dummy variables and within estimation.
+\item \texttt{03\_first\_differences\_vs\_fixed\_effects.R}: shows the exact equality of FE and FD when $T=2$ and then illustrates why FD can be more fragile under measurement error.
+\item \texttt{04\_two\_way\_fixed\_effects.R}: shows how common time shocks can bias one-way FE and why regressors with only aggregate time variation disappear under two-way fixed effects.
+\item \texttt{05\_clustered\_inference.R}: compares naive, heteroskedasticity-robust, and cluster-robust uncertainty in a panel with within-unit dependence.
+\end{itemize}
+All scripts source \texttt{panel\_helpers.R}, use only base \textsf{R}, and print short interpretations so that students can connect the output directly to the lecture arguments.
+
+\subsection{Lecture 1 Summary}
+Lecture 1 establishes a clean hierarchy of static panel methods and how to use them responsibly:
+\begin{itemize}
+\item Pooled \ac{OLS} is simple but generally mixes within and between variation.
+\item Fixed effects remove time-invariant unit heterogeneity by demeaning.
+\item First differences remove the same heterogeneity by comparing adjacent periods.
+\item Two-way fixed effects additionally remove common time shocks.
+\item Credible inference usually requires clustered standard errors.
+\end{itemize}
+
+The unifying principle is straightforward: panel methods aim to isolate variation that remains credible after accounting for persistent heterogeneity, and then to measure uncertainty using the number of genuinely independent pieces of information rather than the raw number of rows.
+
+\section{Lecture 2: Modern Methods and Extensions}
+
+\subsection{Difference-in-Differences as a Panel Estimator}
+Difference-in-differences (\ac{DiD}) is best understood as a panel estimator with a causal design layered on top of the fixed-effects logic. The idea is to compare the change in outcomes for a treated group to the change in outcomes for a control group.
+
+Start with the canonical two-group, two-period design. Let $D_i=1$ for treated units and $Post_t=1$ after the intervention. The standard regression is
+\begin{equation}
+y_{it} = \alpha + \gamma D_i + \lambda Post_t + \delta (D_i \times Post_t) + u_{it}.
+\label{eq:did_2x2}
+\end{equation}
+The coefficient of interest is $\delta$. In sample means, it equals
+\begin{equation}
+\hat{\delta}^{DiD}
+=
+(\bar{y}_{1,post}-\bar{y}_{1,pre})-(\bar{y}_{0,post}-\bar{y}_{0,pre}),
+\label{eq:did_algebra}
+\end{equation}
+where the first subscript indexes treated versus control and the second indexes pre versus post.
+
+Equation \eqref{eq:did_algebra} makes the logic transparent. The first difference removes time-invariant differences between treated and control groups. The second difference removes aggregate changes common to both groups. What remains is the differential change experienced by the treated group after treatment.
+
+In panel language, \ac{DiD} is a special case of a fixed-effects model:
+\begin{equation}
+y_{it} = \alpha_i + \lambda_t + \delta W_{it} + u_{it},
+\label{eq:did_fe}
+\end{equation}
+where $W_{it}$ is a treatment indicator that turns on for treated units after the intervention. The coefficient $\delta$ is therefore identified from within-unit changes relative to the evolution of untreated units.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Fixed effects by themselves remove additive heterogeneity. Difference-in-differences adds a causal comparison group. The identifying claim is no longer merely ``within-unit''; it is ``treated units changed differently from untreated units for a reason attributable to treatment.''
+\end{boxD}
+
+\subsection{Parallel Trends and Causal Interpretation}
+The central identifying assumption in \ac{DiD} is \emph{parallel trends}. In words: absent treatment, the average outcome for treated and control units would have moved in parallel over time.
+
+Using potential outcomes, let $Y_{it}(0)$ denote the untreated potential outcome. Parallel trends in the two-period case is
+\begin{equation}
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1]
+=
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0].
+\label{eq:parallel_trends}
+\end{equation}
+Under \eqref{eq:parallel_trends}, the untreated group's change is a valid counterfactual for what would have happened to the treated group in the absence of treatment.
+
+This is weaker than requiring treated and control groups to have the same levels. They may differ permanently. What matters is the evolution of untreated outcomes, not equality of baseline means.
+
+There are several standard threats:
+\begin{itemize}
+\item \textbf{Differential preexisting trends.} Treated units may already have been on a different path before treatment.
+\item \textbf{Anticipation.} Units may react before treatment begins, contaminating the pre-period.
+\item \textbf{Composition change.} Entry, exit, or changing sample composition can make treated and control groups incomparable across time.
+\item \textbf{Other contemporaneous shocks.} Some event besides treatment may differentially affect the treated group.
+\end{itemize}
+
+\begin{boxF}
+\textbf{Common mistake.}
+It is not enough that treated and control groups look similar in levels. \ac{DiD} does not need equal intercepts. It needs a credible claim that, absent treatment, their \emph{changes} would have been similar.
+\end{boxF}
+
+In practice, the credibility of parallel trends comes from design and institutional knowledge first, and from diagnostics second. One should examine pre-treatment outcome paths, understand treatment assignment, and ask whether the control group is genuinely exposed to the same macro environment as the treated group.
+
+\subsection{Event Studies and Dynamic Treatment Effects}
+Event studies generalize \ac{DiD} by allowing treatment effects to vary with event time. Let $G_i$ denote the treatment date for unit $i$. A common specification is
+\begin{equation}
+y_{it} = \alpha_i + \lambda_t + \sum_{k \neq -1}\beta_k 1\{t-G_i=k\} + u_{it},
+\label{eq:event_study}
+\end{equation}
+where the omitted period $k=-1$ serves as the reference period.
+
+The lead coefficients, $\beta_k$ for $k<0$, are often used as a diagnostic for pretrends. If they are large and systematic, the parallel-trends assumption becomes less credible. The lag coefficients, $\beta_k$ for $k\geq 0$, trace the dynamic response after treatment.
+
+Event studies are useful for two distinct reasons:
+\begin{itemize}
+\item \textbf{Diagnosis.} Pre-treatment leads reveal whether treated and control units were already diverging.
+\item \textbf{Substance.} Post-treatment lags reveal whether treatment effects build gradually, fade out, or reverse.
+\end{itemize}
+
+However, the familiar two-way fixed-effects event-study regression can be misleading under staggered adoption with heterogeneous treatment effects. The reason is that already-treated units can act as controls for newly treated units, which contaminates the comparison.
+
+\begin{boxD}
+\textbf{Why this matters.}
+In staggered-adoption settings, the coefficient on a lead or lag is not automatically the average causal effect at that event time. It can be a weighted average of many comparisons, including comparisons that are economically inappropriate.
+\end{boxD}
+
+This is the modern two-way fixed-effects caution. When treatment timing is staggered and effects vary across cohorts or over event time, standard two-way fixed-effects event studies can place negative or otherwise distorted weights on cohort-time effects. Contemporary practice therefore often uses cohort-specific or group-time estimators that avoid contaminated comparisons.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Seeing flat pretrends in a staggered-adoption two-way fixed-effects event study does not automatically validate the design. The estimator itself may be mixing treated and already-treated units in problematic ways.
+\end{boxF}
+
+\subsection{Random Effects}
+Random effects keep the unobserved-effects structure
+\[
+y_{it} = x_{it}'\beta + \alpha_i + u_{it},
+\]
+but replace the fixed-effects logic with a stronger orthogonality assumption:
+\begin{equation}
+\E[\alpha_i \mid x_{i1},\dots,x_{iT}] = 0.
+\label{eq:re_assumption}
+\end{equation}
+Under \eqref{eq:re_assumption}, the unit effect is uncorrelated with the regressors, so both within and between variation are informative about $\beta$.
+
+The random-effects estimator can be written as a quasi-demeaned regression:
+\begin{equation}
+y_{it} - \theta \bar{y}_i
+=
+(x_{it}-\theta \bar{x}_i)'\beta + (u_{it}-\theta \bar{u}_i),
+\label{eq:re_quasi}
+\end{equation}
+where, in the balanced-panel case,
+\begin{equation}
+\theta = 1 - \sqrt{\frac{\sigma_u^2}{\sigma_u^2 + T\sigma_\alpha^2}}.
+\label{eq:theta_re}
+\end{equation}
+When $\theta=1$, we recover fixed effects. When $\theta=0$, we are close to pooled \ac{OLS}. Random effects therefore sit between those two estimators.
+
+The attraction of random effects is efficiency. Because it uses both within and between information, it can estimate coefficients on time-invariant regressors and can be more precise than fixed effects when the orthogonality assumption is credible.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Random effects do not merely offer a computational shortcut. They estimate a different model with a different identifying assumption. The efficiency gain is purchased by assuming away correlation between regressors and permanent heterogeneity.
+\end{boxD}
+
+\subsection{Correlated Random Effects (Mundlak)}
+Correlated random effects, often associated with Mundlak, provide a useful compromise. Instead of assuming $\alpha_i$ is orthogonal to the regressors, write
+\begin{equation}
+\alpha_i = \bar{x}_i'\pi + c_i,
+\qquad
+\E[c_i \mid x_{i1},\dots,x_{iT}] = 0.
+\label{eq:mundlak_decomp}
+\end{equation}
+Substituting into the outcome equation gives
+\begin{equation}
+y_{it} = x_{it}'\beta + \bar{x}_i'\pi + c_i + u_{it}.
+\label{eq:mundlak}
+\end{equation}
+
+Equation \eqref{eq:mundlak} says that the correlation between regressors and permanent heterogeneity is captured by the unit means $\bar{x}_i$. Conditional on those means, the remaining random effect $c_i$ is orthogonal.
+
+This has two major virtues:
+\begin{itemize}
+\item The coefficient on the time-varying regressor, $\beta$, coincides with the fixed-effects estimand under standard conditions.
+\item We can still estimate coefficients on time-invariant regressors if they are added to the specification.
+\end{itemize}
+
+The Mundlak formulation also has interpretive value. It separates the \emph{within effect} of changing $x_{it}$ from the \emph{between effect} associated with a unit's long-run average exposure.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Random effects versus fixed effects is not the only choice. In many applications, correlated random effects are the right middle ground because they respect the likely correlation between unit heterogeneity and the long-run regressor level.
+\end{boxF}
+
+\subsection{Fixed Effects Versus Random Effects}
+Fixed effects and random effects answer different econometric questions:
+\begin{itemize}
+\item \textbf{FE:} what is the within-unit association between changes in $x_{it}$ and changes in $y_{it}$ after removing all time-invariant heterogeneity?
+\item \textbf{RE:} what is the best linear combination of within and between variation under the assumption that permanent heterogeneity is orthogonal to regressors?
+\end{itemize}
+
+The practical comparison is straightforward:
+\begin{itemize}
+\item \textbf{Assumptions.} FE allows arbitrary correlation between $\alpha_i$ and $x_{it}$; RE does not.
+\item \textbf{Variation used.} FE uses only within-unit variation; RE uses within and between variation.
+\item \textbf{Time-invariant regressors.} FE cannot estimate them; RE can.
+\item \textbf{Efficiency.} If \eqref{eq:re_assumption} is correct, RE is typically more efficient.
+\end{itemize}
+
+This tradeoff motivates Hausman-style reasoning. If RE is consistent, both FE and RE are consistent, but RE is more efficient. If RE is inconsistent because $\alpha_i$ and $x_{it}$ are correlated, FE remains consistent while RE does not. A large discrepancy between the two estimators is therefore evidence against the random-effects orthogonality restriction.
+
+\begin{boxD}
+\textbf{Why this matters.}
+The FE-versus-RE decision is really a decision about economic heterogeneity. Do permanently different units choose systematically different regressor values? In most microeconomic settings, that is a substantive question with an economic answer, not a purely statistical one.
+\end{boxD}
+
+\subsection{Dynamic Panels}
+Dynamic panels introduce lagged outcomes as regressors:
+\begin{equation}
+y_{it} = \rho y_{i,t-1} + x_{it}'\beta + \alpha_i + u_{it}.
+\label{eq:dynamic_panel}
+\end{equation}
+This specification is natural when outcomes are persistent, as in earnings, productivity, or investment.
+
+However, fixed effects no longer solve the endogeneity problem by themselves. Demeaning \eqref{eq:dynamic_panel} gives
+\[
+y_{it}-\bar{y}_i
+=
+\rho (y_{i,t-1}-\bar{y}_i)
++
+(x_{it}-\bar{x}_i)'\beta + (u_{it}-\bar{u}_i).
+\]
+The transformed lagged dependent variable is correlated with the transformed error because $y_{i,t-1}$ contains $u_{i,t-1}$, which is part of $\bar{u}_i$.
+
+This generates \emph{Nickell bias}: in short panels, the fixed-effects estimator of $\rho$ is biased even when the idiosyncratic shocks are serially uncorrelated. The bias is of order $1/T$, so it becomes less important when $T$ is large, but it can be severe when $T$ is small.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Adding unit fixed effects does not make a lagged dependent variable exogenous. In dynamic panels, fixed effects remove $\alpha_i$ but create a new correlation between the transformed lag and the transformed error.
+\end{boxF}
+
+Dynamic panels therefore motivate internal-instrument approaches such as Arellano-Bond and related generalized method of moments estimators.
+
+\subsection{Arellano--Bond Intuition}
+Arellano-Bond starts from the first-differenced version of the dynamic panel:
+\begin{equation}
+\Delta y_{it} = \rho \Delta y_{i,t-1} + \Delta x_{it}'\beta + \Delta u_{it}.
+\label{eq:ab_diff}
+\end{equation}
+Differencing removes the unit effect, but $\Delta y_{i,t-1}$ is still endogenous because it contains $u_{i,t-1}$, which is also part of $\Delta u_{it}=u_{it}-u_{i,t-1}$.
+
+The key insight is that deeper lags of $y$ are valid instruments under suitable assumptions. If $u_{it}$ is serially uncorrelated, then for $s \geq 2$,
+\begin{equation}
+\E[y_{i,t-s}\Delta u_{it}] = 0.
+\label{eq:ab_moment}
+\end{equation}
+So $y_{i,t-2}$ and earlier lags can instrument $\Delta y_{i,t-1}$.
+
+This is attractive because the panel itself supplies the instruments. We do not need an external instrument in the usual \ac{IV} sense. The identifying content comes from timing restrictions.
+
+In practice, Arellano-Bond is usually implemented as a generalized method of moments estimator that stacks many such moment conditions. Two diagnostics are central:
+\begin{itemize}
+\item \textbf{Serial-correlation tests.} First-differenced errors should typically show first-order correlation but not second-order correlation if the original $u_{it}$ is serially uncorrelated.
+\item \textbf{Instrument discipline.} Too many instruments can overfit endogenous variables and weaken specification tests.
+\end{itemize}
+
+\begin{boxD}
+\textbf{Why this matters.}
+Arellano-Bond turns the panel's time structure into an identification device. The estimator works not because differencing is magical, but because the lag structure implies moment conditions that can be defended economically.
+\end{boxD}
+
+The broader lesson is that dynamic panels are not simply a more elaborate version of static fixed effects. Once lagged outcomes enter the regression, timing assumptions become central and internal instruments become the natural extension.
+
+\subsection{Lecture 2 Summary}
+Lecture 2 adds a causal and dynamic layer to the panel toolkit:
+\begin{itemize}
+\item \ac{DiD} is a fixed-effects design built on the parallel-trends assumption.
+\item Event studies trace dynamics but require care under staggered adoption.
+\item Random effects gain efficiency by imposing orthogonality between regressors and unit effects.
+\item Mundlak's correlated random effects recover fixed-effects intuition while preserving more structure.
+\item Dynamic panels break the static fixed-effects logic and motivate internal-instrument estimators such as Arellano-Bond.
+\end{itemize}
+
+The common theme is that richer empirical questions require stronger design assumptions. Modern panel methods are powerful because they encode those assumptions explicitly, not because the panel structure alone guarantees causal interpretation.
+
+\section{Worked Examples}
+
+\subsection{Example 1: Pooled OLS, FE, and FE with Time Effects}
+This example will track how a coefficient changes as the specification moves from pooled OLS to unit FE and then to two-way FE. The interpretation will center on what source of variation is being removed at each step.
+
+\subsection{Example 2: Difference-in-Differences in Practice}
+This example will use a stylized policy reform to map treatment, control, timing, and identifying assumptions into a concrete regression setup. The discussion will stress both interpretation and empirical threats.
+
+\section{Summary Tables}
+
+\subsection{Static Panel Estimators}
+This table will compare pooled OLS, FE, FD, and RE by identifying variation, assumptions, strengths, and weaknesses. Its purpose is to give students a compact decision map for standard panel settings.
+
+\subsection{Causal and Dynamic Panel Designs}
+This table will compare FE, DiD, and dynamic-panel estimators by research question, identification logic, and main risks. It will act as a bridge from foundational panel methods to modern applied practice.
+
+\section{Problem Set}
+
+\subsection{Conceptual Questions}
+This subsection will contain short questions on identification, interpretation, and assumptions. The aim is to test economic reasoning before algebra.
+
+\subsection{Derivation Questions}
+This subsection will contain focused derivations on pooled-OLS bias, the within estimator, differencing, and DiD algebra. The questions will reinforce the mechanics needed for lecture discussion.
+
+\subsection{Applied Questions}
+This subsection will contain small empirical-design exercises asking students to diagnose estimands, threats, and appropriate standard errors. Each question will come with a brief solution sketch in the final version.
+
+\section{Unifying Perspective}
+This concluding section will tie together panel methods as different ways of isolating credible within-unit or policy-induced variation. It will also summarize how assumptions become stronger as the design moves from descriptive panel regressions to causal and dynamic settings.
+
+\end{document}

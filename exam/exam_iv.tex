@@ -1,0 +1,293 @@
+% =============================================================
+% Multiple Choice Exam: Instrumental Variables Regression
+% Course: Quantitative Economics (PhD), Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tikz}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Quantitative Economics -- Vilnius University, 2026}
+\rhead{Instrumental Variables Exam}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Custom command for answer choices
+\newcommand{\choices}[4]{%
+  \begin{enumerate}[label=(\alph*), leftmargin=2em, itemsep=2pt]
+    \item #1
+    \item #2
+    \item #3
+    \item #4
+  \end{enumerate}
+}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Exam: Instrumental Variables Regression}\\[0.5em]
+  {\large Quantitative Economics }\\[0.3em]
+  {\normalsize Vilnius University, 2026}\\[0.3em]
+  {\normalsize Instructor: Swapnil Singh}\\[1em]
+  \rule{0.6\textwidth}{0.4pt}
+\end{center}
+
+\vspace{0.5em}
+
+\noindent\textbf{Instructions:}
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+  \item This exam consists of \textbf{12 multiple choice questions}, each worth \textbf{1 point} (total: \textbf{12 points}).
+  \item Select the \textbf{single best answer} for each question.
+  \item No partial credit. No penalty for guessing.
+  \item Time allowed: 2 hours: 10:00AM -- 12:00 PM.
+\end{itemize}
+
+\vspace{0.3em}
+\noindent\textbf{Name:} \rule{8cm}{0.4pt} \hfill \textbf{Date:} March 30, 2026
+
+\vspace{1em}
+\rule{\textwidth}{0.4pt}
+
+% ================================================================
+%  QUESTIONS
+% ================================================================
+
+\bigskip
+
+\noindent\textbf{Question 1.} \textit{(Sources of endogeneity)} \\[0.3em]
+Which of the following is \textbf{not} one of the three classical sources of endogeneity?
+
+\choices
+{Omitted variable bias}
+{Heteroskedasticity}
+{Measurement error in the regressor}
+{Simultaneous causality}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 2.} \textit{(Instrument validity conditions)} \\[0.3em]
+A valid instrumental variable $Z$ for the endogenous regressor $X$ in the model $Y_i = \beta_0 + \beta_1 X_i + u_i$ must satisfy two conditions. Which pair correctly states them?
+
+\choices
+{$\operatorname{corr}(Z_i, X_i) \neq 0$ and $\operatorname{corr}(Z_i, u_i) = 0$}
+{$\operatorname{corr}(Z_i, Y_i) = 0$ and $\operatorname{corr}(Z_i, X_i) \neq 0$}
+{$\operatorname{corr}(Z_i, u_i) \neq 0$ and $\operatorname{corr}(Z_i, X_i) = 0$}
+{$\operatorname{corr}(Z_i, X_i) = 0$ and $\operatorname{corr}(Z_i, Y_i) \neq 0$}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 3.} \textit{(Identifying endogeneity)} \\[0.3em]
+A researcher regresses wages on years of education but omits innate ability from the regression. Which type of endogeneity is present?
+
+\choices
+{Simultaneous causality}
+{Measurement error}
+{Omitted variable bias}
+{No endogeneity is present; OLS is consistent}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 4.} \textit{(Levels of exogeneity)} \\[0.3em]
+Let $Z \sim N(0,1)$ and define $u = Z^2 - 1$. Which of the following statements is true?
+
+\choices
+{$\operatorname{cov}(Z, u) \neq 0$ and $E(u \mid Z) \neq 0$}
+{$\operatorname{cov}(Z, u) = 0$ and $E(u \mid Z) = 0$}
+{$\operatorname{cov}(Z, u) = 0$ but $E(u \mid Z) \neq 0$ in general}
+{$\operatorname{cov}(Z, u) \neq 0$ but $E(u \mid Z) = 0$}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 5.} \textit{(Evaluating instruments)} \\[0.3em]
+A researcher wants to estimate the effect of class size on student test scores. Which of the following is most likely to be a \textbf{valid} instrument for class size?
+
+\choices
+{School district budget per pupil}
+{Random fluctuations in cohort size due to birth-date variation}
+{Average temperature in the school district}
+{Average parental income in the school district}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 6.} \textit{(Omitted variable bias formula)} \\[0.3em]
+The true DGP is $Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_i + \varepsilon_i$ with $E(\varepsilon_i \mid X_i, W_i) = 0$, but $W_i$ is unobserved. If $\beta_2 > 0$ and $\operatorname{cov}(X_i, W_i) > 0$, the OLS estimator $\widehat{\beta}_1^{OLS}$ is:
+
+\choices
+{Consistent for $\beta_1$}
+{Biased \emph{downward} (underestimates $\beta_1$)}
+{Biased \emph{upward} (overestimates $\beta_1$)}
+{Unbiased but inefficient}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 7.} \textit{(Attenuation bias)} \\[0.3em]
+In the classical measurement error model, the true value is $X_i^* $ and we observe $X_i = X_i^* + w_i$. If the true coefficient is $\beta_1 = 2$, $\sigma_{X^*}^2 = 4$, and $\sigma_w^2 = 1$, what is the probability limit of the OLS estimator?
+
+\choices
+{$2.0$}
+{$1.6$}
+{$2.5$}
+{$1.0$}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 8.} \textit{(Simultaneous equations bias)} \\[0.3em]
+In a supply--demand system with demand slope $\alpha_1 < 0$, supply slope $\gamma_1 > 0$, and independent shocks with variances $\sigma_d^2$ and $\sigma_s^2$, the OLS estimator of the demand equation converges to:
+\[
+\widehat{\alpha}_1^{OLS} \xrightarrow{p} \frac{\alpha_1 \sigma_s^2 + \gamma_1 \sigma_d^2}{\sigma_s^2 + \sigma_d^2}
+\]
+What is the correct interpretation of this probability limit?
+
+\choices
+{It consistently estimates the demand slope $\alpha_1$}
+{It consistently estimates the supply slope $\gamma_1$}
+{It is a variance-weighted average of the demand and supply slopes, estimating neither curve}
+{It converges to zero regardless of parameter values}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 9.} \textit{(Weak instruments and exogeneity violations)} \\[0.3em]
+Suppose the instrument $Z$ is \emph{not} perfectly exogenous, so $\operatorname{cov}(Z_i, u_i) = \rho = 0.01$. If the instrument is \emph{strong} ($\operatorname{cov}(Z_i, X_i) = 0.5$), the TSLS asymptotic bias is $0.02$. If the instrument is \emph{weak} ($\operatorname{cov}(Z_i, X_i) = 0.02$), the bias becomes $0.50$. What does this illustrate?
+
+\choices
+{Strong instruments always produce zero bias even when exogeneity fails}
+{Weak instruments \emph{amplify} even small violations of the exogeneity condition}
+{The exogeneity condition is irrelevant when instruments are strong}
+{Weak instruments reduce the bias because they carry less information}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 10.} \textit{(IV and the omitted variable)} \\[0.3em]
+In the OVB setup ($Y_i = \beta_0 + \beta_1 X_i + \beta_2 W_i + \varepsilon_i$ with $W_i$ unobserved), a researcher proposes parental income as an instrument for education in a wage regression, where ability is the omitted variable. Why is parental income \textbf{not} a valid instrument?
+
+\choices
+{Parental income is unlikely to be correlated with education (relevance fails)}
+{Parental income is likely correlated with the child's ability, violating exogeneity}
+{Parental income directly causes wages, so it belongs in the structural equation}
+{Both (b) and (c)}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 11.} \textit{(External validity)} \\[0.3em]
+You read a randomized controlled trial that studies the effect of a new teaching method on student performance. The method follows a ``flipped classroom'' approach: students are expected to learn material on their own before class, and class time is devoted to advanced problem-solving. The study was conducted at an elite university in 2024 and found large positive effects on test scores.
+Using the concept of external validity, which of the following statements is most accurate?
+
+\choices
+{The results are likely to apply equally well to all universities because the study is randomized}
+{The results are not internally valid because the sample is not representative}
+{The results may not apply to less selective universities if students there are less prepared to learn material independently}
+{The results are biased due to reverse causality}
+
+\bigskip
+
+% ----------------------------------------------------------------
+
+\noindent\textbf{Question 12.} \textit{(Simultaneous equations and fiscal multiplier)} \\[0.3em]
+Consider a simple macroeconomic model where you aim to estimate the fiscal multiplier. The economy is described by the following two equations:
+\begin{equation}
+    y_t = \beta_0 + \beta_1 g_t + u_t
+\end{equation}
+\begin{equation}
+    g_t = \gamma_0 + \gamma_1 y_t + v_t
+\end{equation}
+
+In this model:
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item $y_t$ is Real GDP.
+    \item $g_t$ is Government Spending.
+    \item $\beta_1$ is the fiscal multiplier.
+    \item $\gamma_1$ captures the policy response.
+\end{itemize}
+
+Assuming the error terms $u_t$ and $v_t$ are i.i.d.\ and uncorrelated with each other ($\operatorname{Cov}(u_t, v_t) = 0$), which of the following statements regarding the OLS estimation of $\beta_1$ is correct?
+
+\choices
+{The OLS estimator $\widehat{\beta}_1$ is always unbiased because the structural shocks $u_t$ and $v_t$ are independent}
+{The OLS estimator $\widehat{\beta}_1$ provides an unbiased estimate of $\beta_1$ only if $\gamma_1 = 0$}
+{If $\gamma_1 < 0$ (countercyclical policy), the OLS estimate $\widehat{\beta}_1$ will typically overestimate the true value of $\beta_1$}
+{The presence of reverse causality ($\gamma_1 \neq 0$) affects the variance of the estimator but does not result in inconsistency}
+
+\vfill
+\begin{center}
+  \rule{0.4\textwidth}{0.4pt}\\[0.3em]
+  {\small\textit{End of Exam}}
+\end{center}
+
+% ================================================================
+%  ANSWER KEY (separate page)
+% ================================================================
+\newpage
+
+\begin{center}
+  {\LARGE\bfseries Answer Key}\\[0.5em]
+  {\large Instrumental Variables -- Multiple Choice Exam}\\[0.5em]
+  \rule{0.4\textwidth}{0.4pt}
+\end{center}
+
+\vspace{1em}
+
+\renewcommand{\arraystretch}{1.6}
+\begin{center}
+\begin{tabular}{clp{10cm}}
+\toprule
+\textbf{Q} & \textbf{Answer} & \textbf{Explanation} \\
+\midrule
+1 & (b) & The three classical sources of endogeneity are omitted variable bias, measurement error, and simultaneous causality. Heteroskedasticity does \emph{not} cause endogeneity; it affects efficiency and standard errors, but not the consistency of OLS. \\
+
+2 & (a) & Instrument relevance requires $\operatorname{corr}(Z, X) \neq 0$, and instrument exogeneity requires $\operatorname{corr}(Z, u) = 0$. \\
+
+3 & (c) & Ability is an unobserved variable in the error term that is correlated with education. This is the textbook example of omitted variable bias. \\
+
+4 & (c) & $\operatorname{cov}(Z, u) = E(Z(Z^2-1)) = E(Z^3) = 0$ (since $Z \sim N(0,1)$ has zero third moment). However, $E(u \mid Z = z) = z^2 - 1 \neq 0$ for $z \neq \pm 1$. This is the classic counterexample showing that zero correlation does not imply mean independence. \\
+
+5 & (b) & Random birth-date fluctuations (Hoxby, 2000) affect class size through cohort-size variation and are plausibly unrelated to unobservable determinants of test scores. Budget per pupil and parental income are likely correlated with school quality and family background. Temperature has no clear relevance to class size. \\
+
+6 & (c) & The OVB formula gives $\text{plim}\;\widehat{\beta}_1^{OLS} = \beta_1 + \beta_2 \frac{\operatorname{cov}(X,W)}{\operatorname{var}(X)}$. With $\beta_2 > 0$ and $\operatorname{cov}(X,W) > 0$, the bias term is positive, so OLS overestimates $\beta_1$. \\
+
+7 & (b) & $\text{plim}\;\widehat{\beta}_1^{OLS} = \beta_1 \cdot \frac{\sigma_{X^*}^2}{\sigma_{X^*}^2 + \sigma_w^2} = 2 \times \frac{4}{4+1} = 2 \times 0.8 = 1.6$. Classical measurement error attenuates the coefficient toward zero. \\
+
+8 & (c) & The OLS probability limit is a variance-weighted average of the demand slope $\alpha_1$ and the supply slope $\gamma_1$. It estimates neither the demand nor the supply curve---it produces a meaningless hybrid. \\
+
+9 & (b) & The asymptotic bias of TSLS is $\rho / \operatorname{cov}(Z,X)$. When the instrument is weak ($\operatorname{cov}(Z,X)$ is small), the denominator shrinks, amplifying even tiny violations of exogeneity into large biases. This is a central danger of weak instruments. \\
+
+10 & (d) & Parental income is likely correlated with the child's innate ability (violating the exogeneity condition $\operatorname{cov}(Z, W) = 0$), and it may also directly affect wages through networks, wealth transfers, and access to opportunities, meaning it should be in the structural equation rather than excluded as an instrument. \\
+
+11 & (c) & Randomization ensures \emph{internal} validity, not external validity. The finding that flipped classrooms work at an elite university may not generalize to less selective settings where students lack the preparation or motivation to learn material independently before class. Option (b) confuses internal and external validity; option (d) is irrelevant since randomization rules out reverse causality within the study.  \\
+
+12 & (b) & Substituting the policy rule into the structural equation yields the reduced form $g_t = (\gamma_0 + \gamma_1 \beta_0)/(1 - \beta_1 \gamma_1) + (\gamma_1 u_t + v_t)/(1 - \beta_1 \gamma_1)$. Hence $\operatorname{Cov}(g_t, u_t) = \gamma_1 \sigma_u^2 / (1 - \beta_1 \gamma_1)$, which equals zero \emph{only} when $\gamma_1 = 0$. When $\gamma_1 \neq 0$, OLS is inconsistent---not merely inefficient. Option (c) gets the sign wrong: with $\gamma_1 < 0$ and $\beta_1 > 0$, the covariance is negative, so OLS \emph{under}estimates $\beta_1$.  \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}
