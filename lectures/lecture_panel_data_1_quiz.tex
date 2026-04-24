@@ -1,0 +1,226 @@
+% =============================================================
+% Lecture: Panel Data Econometrics
+% Topic: Lecture 1 Quiz
+% Course: Quantitative Economics, Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{appendixnumberbeamer}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{hyperref}
+
+\usetheme{SimplePlus}
+
+\title{Panel Data Econometrics}
+\subtitle{Lecture 1 Quiz: Foundations}
+\author{Swapnil Singh}
+\institute{Lietuvos Bankas \and Kaunas University of Technology}
+\date{Vilnius University, 2026}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\plim}{\operatorname*{plim}}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\scriptsize\color{gray} Based on \texttt{lectures/lecture\_panel\_data\_1.tex}.}
+\end{frame}
+
+\begin{frame}{How to use this quiz}
+\small
+\begin{block}{Coverage}
+These five questions cover the core logic of Lecture 1:
+\begin{itemize}
+  \item why panel data change the comparison,
+  \item why pooled OLS often fails,
+  \item what fixed effects identify,
+  \item how first differences compare with fixed effects,
+  \item what two-way fixed effects absorb.
+\end{itemize}
+\end{block}
+
+\begin{alertblock}{Deliberate omission}
+Inference and clustering are excluded here. This quiz is about identification, interpretation, and algebra.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Quiz 1}
+\small
+\begin{block}{Question}
+Suppose we study the effect of worker training $Train_{it}$ on wages $Wage_{it}$ using panel data.
+
+Why is the panel comparison often more credible than the pure cross-sectional comparison? State the key source of omitted-variable bias that panel data may help remove.
+\end{block}
+\end{frame}
+
+\begin{frame}{Solution 1}
+\small
+\begin{exampleblock}{Answer}
+The cross-sectional comparison mixes workers with different permanent traits, such as ability, motivation, or firm quality. If those traits affect both training and wages, then
+\[
+\Cov(Train_{it},\alpha_i)\neq 0,
+\]
+where $\alpha_i$ is a time-invariant worker effect.
+\end{exampleblock}
+
+\begin{block}{Interpretation}
+Panel data let us compare a worker to the worker's own past. If the omitted trait is stable over time, fixed effects or first differences can remove $\alpha_i$ and shift attention from across-worker comparisons to within-worker changes.
+\end{block}
+\end{frame}
+
+\begin{frame}{Quiz 2}
+\small
+\begin{block}{Question}
+Consider the scalar panel model
+\[
+y_{it} = \beta x_{it} + \alpha_i + u_{it}.
+\]
+Show the probability limit of pooled OLS and explain in one sentence why pooled OLS can be inconsistent even when $\Cov(x_{it},u_{it})=0$.
+\end{block}
+\end{frame}
+
+\begin{frame}{Solution 2}
+\small
+\begin{exampleblock}{Answer}
+The pooled OLS probability limit is
+\[
+\plim \hat{\beta}^{POLS}
+=
+\beta
++ \frac{\Cov(x_{it},\alpha_i)}{\Var(x_{it})}
++ \frac{\Cov(x_{it},u_{it})}{\Var(x_{it})}.
+\]
+\end{exampleblock}
+
+\begin{block}{Interpretation}
+Even if $x_{it}$ is uncorrelated with the idiosyncratic shock $u_{it}$, pooled OLS is still inconsistent whenever $x_{it}$ is correlated with the permanent unit effect $\alpha_i$. Then pooled OLS uses contaminated between-unit variation.
+\end{block}
+\end{frame}
+
+\begin{frame}{Quiz 3}
+\small
+\begin{block}{Question}
+Start from
+\[
+y_{it}=x_{it}'\beta+\alpha_i+u_{it}.
+\]
+Write the within-transformed equation. Then answer: why can fixed effects not estimate the coefficient on a regressor that is constant over time within each unit?
+\end{block}
+\end{frame}
+
+\begin{frame}{Solution 3}
+\small
+\begin{exampleblock}{Within transformation}
+Subtract the unit mean:
+\[
+y_{it}-\bar y_i = (x_{it}-\bar x_i)'\beta + (u_{it}-\bar u_i).
+\]
+Equivalently,
+\[
+\ddot y_{it}=\ddot x_{it}'\beta+\ddot u_{it}.
+\]
+\end{exampleblock}
+
+\begin{block}{Why time-invariant regressors drop out}
+If a regressor does not vary within unit, then $x_{it}=\bar x_i$ for all $t$, so
+\[
+x_{it}-\bar x_i=0.
+\]
+Fixed effects therefore have no within-unit variation left from which to identify its coefficient.
+\end{block}
+\end{frame}
+
+\begin{frame}{Quiz 4}
+\small
+\begin{block}{Question}
+In the model
+\[
+y_{it}=x_{it}\beta+\alpha_i+u_{it},
+\]
+compare fixed effects and first differences.
+
+\begin{enumerate}
+  \item When do they produce exactly the same slope coefficient?
+  \item Why can first differencing be especially sensitive to measurement error?
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Solution 4}
+\small
+\begin{exampleblock}{Part 1}
+Fixed effects and first differences coincide when $T=2$. With only two periods, demeaning and differencing extract the same single within-unit movement.
+\end{exampleblock}
+
+\begin{exampleblock}{Part 2}
+If the observed regressor is
+\[
+x_{it}^{obs}=x_{it}^\ast+\nu_{it},
+\]
+then differencing gives
+\[
+\Delta x_{it}^{obs}=\Delta x_{it}^\ast+(\nu_{it}-\nu_{i,t-1}).
+\]
+So the transformed regressor contains two measurement-error draws, which can magnify attenuation bias.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Quiz 5}
+\small
+\begin{block}{Question}
+Consider the two-way fixed-effects model
+\[
+y_{it}=x_{it}'\beta+\alpha_i+\lambda_t+u_{it}.
+\]
+
+Suppose one regressor can be written as
+\[
+x_{it}=a_i+b_t.
+\]
+Can its coefficient be identified under two-way fixed effects? Explain briefly.
+\end{block}
+\end{frame}
+
+\begin{frame}{Solution 5}
+\small
+\begin{exampleblock}{Answer}
+No. Under two-way fixed effects, the identifying variation must survive both the unit sweep and the time sweep. But a regressor of the form
+\[
+x_{it}=a_i+b_t
+\]
+is completely absorbed by the unit effects and time effects.
+\end{exampleblock}
+
+\begin{block}{Double-demeaning logic}
+After the transformation
+\[
+\tilde x_{it}=x_{it}-\bar x_i-\bar x_t+\bar x,
+\]
+we get $\tilde x_{it}=0$ for every $(i,t)$. So there is no residual variation left to estimate its coefficient.
+\end{block}
+\end{frame}
+
+\begin{frame}{Takeaways}
+\small
+\begin{enumerate}
+  \item Panel data improve credibility by shifting the comparison toward within-unit changes.
+  \item Pooled OLS often fails because it mixes within variation with contaminated between variation.
+  \item Fixed effects identify slopes from within-unit movements only.
+  \item First differences remove the same unit effect, but behave differently when $T>2$ and can amplify measurement error.
+  \item Two-way fixed effects absorb both permanent unit differences and common period shocks.
+\end{enumerate}
+\end{frame}
+
+\end{document}

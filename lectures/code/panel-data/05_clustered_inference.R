@@ -83,3 +83,4 @@ barplot(rejection_rates$rejection_rate,
         ylab = "Rejection rate",
         main = "False rejection under different variance estimators")
 abline(h = 0.05, lty = 2, lwd = 2, col = "firebrick")
+

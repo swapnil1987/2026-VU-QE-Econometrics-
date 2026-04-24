@@ -17,8 +17,8 @@ panel <- simulate_panel_foundations(
   N = 80,
   T = 6,
   beta = truth_beta,
-  rho_alpha = 1.25,
-  rho_lambda = 0.25,
+  rho_alpha = 0.0,
+  rho_lambda = 0.0,
   serial_u = 0.20,
   seed = 101
 )

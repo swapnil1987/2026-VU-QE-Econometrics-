@@ -1116,94 +1116,481 @@ The unifying principle is straightforward: panel methods aim to isolate variatio
 \section{Lecture 2: Modern Methods and Extensions}
 
 \subsection{Difference-in-Differences as a Panel Estimator}
-Difference-in-differences (\ac{DiD}) is best understood as a panel estimator with a causal design layered on top of the fixed-effects logic. The idea is to compare the change in outcomes for a treated group to the change in outcomes for a control group.
+Difference-in-differences (\ac{DiD}) begins with a comparison problem. Suppose a labor-market reform is introduced in some regions but not others, and we want to know whether the reform changed the employment rate. For treated regions after the reform, we observe what actually happened. We do \emph{not} observe what would have happened in those same regions had the reform never been adopted. That missing untreated path is the counterfactual object that the design must recover.
 
-Start with the canonical two-group, two-period design. Let $D_i=1$ for treated units and $Post_t=1$ after the intervention. The standard regression is
+The first temptation is a before-after comparison for the treated group:
 \begin{equation}
-y_{it} = \alpha + \gamma D_i + \lambda Post_t + \delta (D_i \times Post_t) + u_{it}.
-\label{eq:did_2x2}
+\E[y_{post}\mid D=1]-\E[y_{pre}\mid D=1].
+\label{eq:did_before_after}
 \end{equation}
-The coefficient of interest is $\delta$. In sample means, it equals
+This fails whenever aggregate conditions also change between the two periods. A recession, demographic shift, or commodity-price shock will appear in \eqref{eq:did_before_after} whether or not the policy mattered.
+
+The second temptation is a treated-control comparison in the post period:
+\begin{equation}
+\E[y_{post}\mid D=1]-\E[y_{post}\mid D=0].
+\label{eq:did_post_gap}
+\end{equation}
+This fails whenever treated and control units differ systematically even before treatment. A rich region and a poor region may have different employment levels for many persistent reasons that have nothing to do with the policy under study.
+
+\begin{boxF}
+\textbf{Common mistake.}
+\ac{DiD} is not ``treatment minus control after the policy.'' That post-period gap still mixes treatment effects with permanent differences across groups.
+\end{boxF}
+
+\hypertarget{main:did-2x2}{}
+The canonical \ac{DiD} design combines both differences. Let $D_i=1$ for treated units and $Post_t=1$ in the post-treatment period. The sample estimator is
 \begin{equation}
 \hat{\delta}^{DiD}
 =
 (\bar{y}_{1,post}-\bar{y}_{1,pre})-(\bar{y}_{0,post}-\bar{y}_{0,pre}),
 \label{eq:did_algebra}
 \end{equation}
-where the first subscript indexes treated versus control and the second indexes pre versus post.
+where the first subscript indexes treatment status and the second indexes time. This is the ``change in the treated group'' minus the ``change in the control group.''
 
-Equation \eqref{eq:did_algebra} makes the logic transparent. The first difference removes time-invariant differences between treated and control groups. The second difference removes aggregate changes common to both groups. What remains is the differential change experienced by the treated group after treatment.
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+& Pre & Post \\
+\midrule
+Control $(D_i=0)$ & $\bar{y}_{0,pre}$ & $\bar{y}_{0,post}$ \\
+Treated $(D_i=1)$ & $\bar{y}_{1,pre}$ & $\bar{y}_{1,post}$ \\
+\bottomrule
+\end{tabular}
+\caption{The four cell means in the canonical 2x2 \ac{DiD} design.}
+\label{tab:did_2x2_means}
+\end{table}
 
-In panel language, \ac{DiD} is a special case of a fixed-effects model:
+The logic is plain once the four means are laid out:
+\begin{itemize}
+\item the treated-control difference in the pre period, $\bar{y}_{1,pre}-\bar{y}_{0,pre}$, captures baseline level differences;
+\item the control-group change, $\bar{y}_{0,post}-\bar{y}_{0,pre}$, captures common time shocks affecting both groups;
+\item subtracting both leaves the treated group's excess change after treatment.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (0,0) -- (5.2,0) node[right] {time};
+\draw[->] (0,0) -- (0,3.8) node[above] {outcome};
+\draw[dashed] (2.5,0) -- (2.5,3.5);
+\node[below] at (1,0) {pre};
+\node[below] at (4,0) {post};
+\node[above] at (2.5,3.5) {$t_0$};
+\draw[thick,main] (0.7,1.4) -- (2.2,1.9) -- (4.3,4.0);
+\draw[thick,warn] (0.7,0.8) -- (2.2,1.3) -- (4.3,1.95);
+\node[main,right] at (4.35,3.0) {treated};
+\node[warn,right] at (4.35,1.8) {control};
+\end{tikzpicture}
+\caption{The untreated change for controls is used to proxy for the missing untreated change of treated units.}
+\label{fig:did_paths}
+\end{figure}
+
+The regression representation of the 2x2 design is
 \begin{equation}
-y_{it} = \alpha_i + \lambda_t + \delta W_{it} + u_{it},
-\label{eq:did_fe}
+y_{it} = \alpha + \gamma D_i + \lambda Post_t + \delta (D_i \times Post_t) + u_{it}.
+\label{eq:did_2x2}
 \end{equation}
-where $W_{it}$ is a treatment indicator that turns on for treated units after the intervention. The coefficient $\delta$ is therefore identified from within-unit changes relative to the evolution of untreated units.
+Here $\alpha$ is the control-group mean in the pre period, $\gamma$ is the permanent treated-control gap, $\lambda$ is the common post-period shock, and $\delta$ is the \ac{DiD} contrast. A full proof that the interaction coefficient in \eqref{eq:did_2x2} equals \eqref{eq:did_algebra} is placed in \hyperlink{app:did-reg}{\textbf{Appendix A1}}.
 
 \begin{boxD}
 \textbf{Why this matters.}
-Fixed effects by themselves remove additive heterogeneity. Difference-in-differences adds a causal comparison group. The identifying claim is no longer merely ``within-unit''; it is ``treated units changed differently from untreated units for a reason attributable to treatment.''
+Panel structure helps because it lets us compare a unit to its own past. But that alone does not identify a causal effect. \ac{DiD} works only when the untreated units supply a credible estimate of how treated units would have evolved without treatment.
+\end{boxD}
+
+\paragraph{A stylized worked example.}
+Keep in mind a simple policy design. Let $i$ index regions and let $y_{it}$ be the regional employment rate. A labor-market reform is adopted in a subset of regions after year $t_0$. The treatment group consists of reform regions, the control group of otherwise similar regions that do not adopt in that period. We will return to this example repeatedly because it forces us to ask the right empirical question: \emph{would treated regions have followed the same untreated trend as the comparison regions absent the reform?}
+
+\subsection{Potential Outcomes and the DiD Estimand}
+\hypertarget{main:did-po}{}
+The algebra of \ac{DiD} is simple, but causal interpretation requires more discipline. Let $Y_{it}(0)$ denote the untreated potential outcome for unit $i$ at time $t$, and let $Y_{it}(1)$ denote the treated potential outcome. In the canonical two-period design, treatment arrives only in the post period for treated units.
+
+\begin{defN}
+The average treatment effect on the treated in the post period is
+\begin{equation}
+ATT
+=
+\E[Y_{i,post}(1)-Y_{i,post}(0)\mid D_i=1].
+\label{eq:att_did}
+\end{equation}
+\end{defN}
+
+This definition is the correct causal target. It asks: among the units that are actually treated, how much higher or lower is the post-treatment outcome relative to the untreated outcome those same units would have experienced at the same date?
+
+The problem is immediate. For treated units in the post period, we observe $Y_{i,post}(1)$ but not $Y_{i,post}(0)$. So the difficult object is not the treated outcome. It is the missing untreated potential outcome for the treated group after treatment.
+
+Observed outcomes can be written as
+\[
+Y_{i,pre}=Y_{i,pre}(0), \qquad
+Y_{i,post}=D_iY_{i,post}(1)+(1-D_i)Y_{i,post}(0).
+\]
+Therefore the expected \ac{DiD} contrast satisfies
+\begin{align}
+\E[\hat{\delta}^{DiD}]
+&=
+\E[Y_{i,post}\mid D_i=1]-\E[Y_{i,pre}\mid D_i=1] \notag \\
+&\qquad -\Big(\E[Y_{i,post}\mid D_i=0]-\E[Y_{i,pre}\mid D_i=0]\Big) \notag \\
+&=
+ATT \notag \\
+&\qquad + \Big(\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1] \notag \\
+&\qquad\qquad - \E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0]\Big).
+\label{eq:did_att_decomp}
+\end{align}
+Equation \eqref{eq:did_att_decomp} is the heart of the design. The \ac{DiD} contrast equals the causal effect of interest plus a term measuring how differently treated and control units would have evolved even without treatment.
+
+The full derivation is kept in \hyperlink{app:did-att}{\textbf{Appendix A2}} so the main text can stay focused on the economic idea rather than the bookkeeping.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Potential outcomes clarify what \ac{DiD} is trying to learn. The design is not estimating a vague ``policy coefficient.'' It is trying to recover the missing untreated post-period outcome for the treated group.
 \end{boxD}
 
 \subsection{Parallel Trends and Causal Interpretation}
-The central identifying assumption in \ac{DiD} is \emph{parallel trends}. In words: absent treatment, the average outcome for treated and control units would have moved in parallel over time.
+The central identifying assumption is now easy to state.
 
-Using potential outcomes, let $Y_{it}(0)$ denote the untreated potential outcome. Parallel trends in the two-period case is
+\begin{assN}[Parallel trends in untreated potential outcomes]
 \begin{equation}
 \E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1]
 =
 \E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0].
 \label{eq:parallel_trends}
 \end{equation}
-Under \eqref{eq:parallel_trends}, the untreated group's change is a valid counterfactual for what would have happened to the treated group in the absence of treatment.
+\end{assN}
 
-This is weaker than requiring treated and control groups to have the same levels. They may differ permanently. What matters is the evolution of untreated outcomes, not equality of baseline means.
+Under \eqref{eq:parallel_trends}, the second term in \eqref{eq:did_att_decomp} is zero, so the \ac{DiD} contrast identifies the $ATT$:
+\[
+\E[\hat{\delta}^{DiD}] = ATT.
+\]
 
-There are several standard threats:
+This assumption deserves very careful wording.
 \begin{itemize}
-\item \textbf{Differential preexisting trends.} Treated units may already have been on a different path before treatment.
-\item \textbf{Anticipation.} Units may react before treatment begins, contaminating the pre-period.
-\item \textbf{Composition change.} Entry, exit, or changing sample composition can make treated and control groups incomparable across time.
-\item \textbf{Other contemporaneous shocks.} Some event besides treatment may differentially affect the treated group.
+\item It is a statement about \emph{untreated} potential outcomes.
+\item It is a statement about \emph{changes}, not levels.
+\item It allows treated and control groups to differ permanently in baseline means.
+\item It does \emph{not} require the observed post-treatment outcomes to evolve in parallel after treatment.
 \end{itemize}
+
+That last point is often the one students miss. After treatment, observed outcomes should differ if the treatment has an effect. Parallel trends concerns the path of $Y_{it}(0)$, not the path of the observed $Y_{it}$ once one group has been exposed to the intervention.
 
 \begin{boxF}
 \textbf{Common mistake.}
-It is not enough that treated and control groups look similar in levels. \ac{DiD} does not need equal intercepts. It needs a credible claim that, absent treatment, their \emph{changes} would have been similar.
+Equal baseline levels are not the identifying assumption. Treated and control groups can start far apart. What matters is whether, in the absence of treatment, their average untreated \emph{changes} would have been the same.
 \end{boxF}
 
-In practice, the credibility of parallel trends comes from design and institutional knowledge first, and from diagnostics second. One should examine pre-treatment outcome paths, understand treatment assignment, and ask whether the control group is genuinely exposed to the same macro environment as the treated group.
+\paragraph{Why equal levels are unnecessary.}
+Suppose treated regions are structurally more urban than control regions. Then employment rates may differ by level for all dates because of industrial composition, education, or labor-force attachment. \ac{DiD} can still be informative if those permanent level differences are stable and if untreated outcome growth would have been similar across groups.
+
+\paragraph{What makes parallel trends plausible?}
+Usually not a regression output. The case is strongest when treated and control units face the same macro environment, similar underlying demand conditions, and comparable institutional exposure, with treatment arriving for reasons that are not themselves responses to idiosyncratic outcome shocks.
+
+\paragraph{Conditional parallel trends.}
+Sometimes a more plausible claim is
+\[
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1,X_i]
+=
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0,X_i]
+\]
+for a set of pre-treatment covariates $X_i$. This can be useful, but it should be interpreted correctly. Controls may help align treated and control groups on observables or improve precision. They do not rescue a design in which untreated trends are plainly different for deeper economic reasons.
+
+\subsection{Threats to Identification}
+Once the identifying assumption is explicit, the usual threats become easier to organize. Each one is simply a reason why \eqref{eq:parallel_trends} might fail.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.28\linewidth}p{0.35\linewidth}}
+\toprule
+Threat & Why it is dangerous & What helps assess credibility \\
+\midrule
+Differential pretrends & Treated units were already on a different untreated path before the policy. & Plot long pre-period trends, compare industry mix, and explain policy timing institutionally. \\
+Anticipation & Behavior changes before the official treatment date, contaminating the pre period. & Use institutional timelines, placebo treatment dates, and event-study leads. \\
+Composition change & Entry, exit, migration, or sample attrition changes who is being compared over time. & Track sample stability and report balanced-sample checks where relevant. \\
+Spillovers & Control units are indirectly affected by treatment, so they are not untreated counterfactuals. & Use geographically or economically insulated controls and discuss exposure channels. \\
+Concurrent shocks & Another policy or shock hits treated units at the same time as the intervention. & Build the timeline carefully and control for or discuss concurrent reforms. \\
+Endogenous timing & Units adopt treatment in response to shocks already affecting outcomes. & Explain assignment rules and test for pre-adoption outcome movements. \\
+\bottomrule
+\end{tabular}
+\caption{Main threats to identification in \ac{DiD}.}
+\label{tab:did_threats}
+\end{table}
+
+\paragraph{Differential pretrends.}
+This is the classic failure mode. If treated regions were already declining relative to controls before the reform, a negative post-treatment \ac{DiD} estimate could simply continue an existing divergence.
+
+\paragraph{Anticipation.}
+If firms, workers, or households adjust behavior once the policy is announced but before it legally takes effect, the measured pre period is no longer untreated. In that case the benchmark period is contaminated.
+
+\paragraph{Composition change.}
+Suppose the reform induces migration, firm entry, or selective survey response. Then the comparison over time is no longer about the same underlying population. \ac{DiD} has not only a trend problem but a sample-definition problem.
+
+\paragraph{Spillovers and general equilibrium effects.}
+If untreated regions lose workers to treated regions, if nearby firms reprice in response to the treated market, or if treated hospitals divert patients to untreated hospitals, then the control group is itself indirectly treated. This violates the idea that the control trend measures $Y_{it}(0)$.
+
+\paragraph{Concurrent shocks and policy bundling.}
+Many reforms arrive as packages. A change in school funding may coincide with curriculum reform; a tax change may coincide with enforcement reform. Unless those components are separated, \ac{DiD} identifies the joint package, not the single component one might want to discuss rhetorically.
+
+\begin{boxD}
+\textbf{Why this matters.}
+\ac{DiD} is a design argument, not a regression ritual. The regression is only a compact way of writing the comparison. The real work lies in defending the counterfactual trend.
+\end{boxD}
+
+\subsection{Difference-in-Differences as a Fixed-Effects Regression}
+In panel notation, the basic \ac{DiD} design is a special case of two-way fixed effects:
+\begin{equation}
+y_{it} = \alpha_i + \lambda_t + \delta W_{it} + u_{it},
+\label{eq:did_fe}
+\end{equation}
+where $W_{it}=1$ for treated units in treated periods and $W_{it}=0$ otherwise. Equation \eqref{eq:did_fe} says exactly what the design is using:
+\begin{itemize}
+\item unit effects $\alpha_i$ absorb permanent differences across units;
+\item time effects $\lambda_t$ absorb shocks common to all units in a given period;
+\item the coefficient on $W_{it}$ is identified by relative within-unit changes over time.
+\end{itemize}
+
+In the canonical two-period case, first-differencing \eqref{eq:did_fe} yields
+\begin{equation}
+\Delta y_i = (\lambda_{post}-\lambda_{pre}) + \delta D_i + \Delta u_i,
+\label{eq:did_first_difference}
+\end{equation}
+because $\Delta W_i = D_i$. This shows the tight connection between \ac{DiD}, first differences, and fixed effects. With two periods, a first-difference regression of the outcome change on the treatment-group indicator reproduces the same design logic as the interaction model in \eqref{eq:did_2x2}.
+
+Once covariates are added, a useful specification is
+\begin{equation}
+y_{it} = \alpha_i + \lambda_t + x_{it}'\beta + \delta W_{it} + u_{it}.
+\label{eq:did_fe_controls}
+\end{equation}
+The role of $x_{it}$ should be described with discipline. Good controls can improve precision or absorb clearly measured concurrent shocks. But they do not create identification if the untreated trend for treated units remains poorly approximated by the control group.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Two-way fixed effects do not manufacture causal interpretation. Unit and time effects remove additive heterogeneity and common shocks. They do not guarantee that the comparison group supplies the right counterfactual trend.
+\end{boxF}
+
+\subsection{Inference and Clustering in DiD}
+Inference in \ac{DiD} deserves separate attention because the usual standard-error defaults are often misleading. The problem is not exotic. In panels, disturbances are rarely independent across time within a unit, and treatment is often assigned at the group level rather than at the level of each row.
+
+\paragraph{Serial correlation.}
+If $u_{it}$ is persistent within a unit, then the number of statistically independent pieces of information is much smaller than the number of panel rows. In policy panels this matters greatly because treatment typically changes only once or a few times, while outcomes remain autocorrelated. Ignoring that persistence tends to make standard errors too small.
+
+\paragraph{Clustering.}
+As a practical rule, cluster at the level at which treatment varies and shocks are likely to be correlated. If a state law changes treatment status, clustering by individual is too fine because the policy shock is common within state. State-level clustering is usually the more relevant benchmark.
+
+\paragraph{Few clusters.}
+When the number of treated or untreated clusters is small, even cluster-robust standard errors can be unreliable. That is a warning to be explicit rather than casual. In such settings researchers often rely on additional finite-sample adjustments or resampling procedures, but the first obligation is simply to report the cluster structure clearly.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Time effects and clustered inference solve different problems. Time effects control for common shocks in the conditional mean. Clustering adjusts uncertainty for dependence that remains in the error process. One does not substitute for the other.
+\end{boxD}
+
+\paragraph{A short checklist.}
+Before trusting a \ac{DiD} estimate, ask:
+\begin{enumerate}
+\item At what level is treatment assigned?
+\item At what level are residual shocks likely to be correlated?
+\item How many independent clusters are there?
+\item Would the headline result survive a more conservative clustering choice?
+\end{enumerate}
 
 \subsection{Event Studies and Dynamic Treatment Effects}
-Event studies generalize \ac{DiD} by allowing treatment effects to vary with event time. Let $G_i$ denote the treatment date for unit $i$. A common specification is
+Many policies do not have an immediate constant effect. Firms may adjust gradually, workers may learn about the reform over time, and administrative systems may phase in the new rules. Event studies extend \ac{DiD} by allowing the treatment effect to vary with time since adoption.
+
+Let $G_i$ denote the treatment date for unit $i$. A standard specification is
 \begin{equation}
 y_{it} = \alpha_i + \lambda_t + \sum_{k \neq -1}\beta_k 1\{t-G_i=k\} + u_{it},
 \label{eq:event_study}
 \end{equation}
-where the omitted period $k=-1$ serves as the reference period.
-
-The lead coefficients, $\beta_k$ for $k<0$, are often used as a diagnostic for pretrends. If they are large and systematic, the parallel-trends assumption becomes less credible. The lag coefficients, $\beta_k$ for $k\geq 0$, trace the dynamic response after treatment.
-
-Event studies are useful for two distinct reasons:
+where the omitted category $k=-1$ is the period just before treatment. The coefficients have a natural interpretation:
 \begin{itemize}
-\item \textbf{Diagnosis.} Pre-treatment leads reveal whether treated and control units were already diverging.
-\item \textbf{Substance.} Post-treatment lags reveal whether treatment effects build gradually, fade out, or reverse.
+\item for $k<0$, $\beta_k$ are \emph{lead} coefficients describing differences before treatment relative to the reference period;
+\item for $k\geq 0$, $\beta_k$ are \emph{lag} coefficients describing the dynamic response after treatment.
 \end{itemize}
 
-However, the familiar two-way fixed-effects event-study regression can be misleading under staggered adoption with heterogeneous treatment effects. The reason is that already-treated units can act as controls for newly treated units, which contaminates the comparison.
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=1cm,y=0.7cm]
+\draw[->] (-3.6,0) -- (3.7,0) node[right] {event time $k$};
+\draw[->] (0,-1.6) -- (0,2.4) node[above] {effect};
+\foreach \x/\lab in {-3/-3,-2/-2,-1/-1,0/0,1/1,2/2,3/3}
+  \draw (\x,0.08) -- (\x,-0.08) node[below=4pt] {\lab};
+\filldraw[main] (-3,0.15) circle (1.5pt);
+\filldraw[main] (-2,0.05) circle (1.5pt);
+\filldraw[warn] (0,0.55) circle (1.5pt);
+\filldraw[warn] (1,1.0) circle (1.5pt);
+\filldraw[warn] (2,1.25) circle (1.5pt);
+\filldraw[warn] (3,1.15) circle (1.5pt);
+\draw[dashed] (-1,-1.2) -- (-1,2.1);
+\node[above] at (-1,2.1) {reference};
+\end{tikzpicture}
+\caption{Event studies separate pre-treatment leads from post-treatment lags around an omitted reference period.}
+\label{fig:event_study_schematic}
+\end{figure}
 
-\begin{boxD}
-\textbf{Why this matters.}
-In staggered-adoption settings, the coefficient on a lead or lag is not automatically the average causal effect at that event time. It can be a weighted average of many comparisons, including comparisons that are economically inappropriate.
-\end{boxD}
+Event studies are useful for two different reasons. First, they provide a visual and statistical diagnostic for pre-treatment divergence. Second, they describe the substantive dynamics of treatment effects after adoption.
 
-This is the modern two-way fixed-effects caution. When treatment timing is staggered and effects vary across cohorts or over event time, standard two-way fixed-effects event studies can place negative or otherwise distorted weights on cohort-time effects. Contemporary practice therefore often uses cohort-specific or group-time estimators that avoid contaminated comparisons.
+\paragraph{How to read an event-study plot without fooling yourself.}
+\begin{enumerate}
+\item Check the omitted reference period. Every coefficient is relative to that baseline.
+\item Look at the scale of the vertical axis before making claims about ``flat'' pretrends.
+\item Treat insignificant leads as weak evidence at best, not proof of validity.
+\item Read post-treatment coefficients as dynamic effects only if the comparison set is credible.
+\end{enumerate}
 
 \begin{boxF}
 \textbf{Common mistake.}
-Seeing flat pretrends in a staggered-adoption two-way fixed-effects event study does not automatically validate the design. The estimator itself may be mixing treated and already-treated units in problematic ways.
+Failing to reject zero pre-treatment leads is not the same as proving parallel trends. Small samples, noisy outcomes, and poor comparison groups can all generate uninformative pretrend tests.
 \end{boxF}
+
+\subsection{Staggered Adoption and Modern TWFE Cautions}
+Many modern applications do not have one treated group and one treatment date. Instead, different cohorts adopt at different times. This is called \emph{staggered adoption}. The natural temptation is to estimate \eqref{eq:did_fe} or \eqref{eq:event_study} with two-way fixed effects and interpret the treatment coefficient as the average effect of treatment.
+
+That interpretation can fail when treatment effects are heterogeneous across cohorts or over event time. The reason is subtle but important: once some units are already treated, they may be used as controls for units treated later. But already-treated units are not untreated counterfactuals.
+
+\paragraph{A three-cohort intuition.}
+Suppose there are early-treated, late-treated, and never-treated regions.
+\begin{itemize}
+\item Early-treated regions are untreated controls only before they adopt.
+\item After they adopt, they should no longer serve as controls for late-treated regions.
+\item Standard two-way fixed effects may nevertheless use them that way.
+\end{itemize}
+If treatment effects grow over time, shrink over time, or differ across cohorts, the resulting coefficient can become a difficult weighted average of comparisons, some of which carry the wrong sign or the wrong economic interpretation.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Two-way fixed effects are not problematic because fixed effects are bad. The issue is the comparison set. Under staggered adoption, already-treated units can contaminate the counterfactual for newly treated units.
+\end{boxD}
+
+The practical lesson is straightforward. In staggered settings, one should prefer estimators organized around cohort-time or group-time average treatment effects, using not-yet-treated or never-treated units as comparisons whenever that design is economically sensible. Students do not need the full software taxonomy at this stage, but they should leave with the right instinct: \emph{ask who is being compared to whom in each calendar period.}
+
+\begin{boxF}
+\textbf{Common mistake.}
+Seeing a tidy two-way fixed-effects coefficient in a staggered-adoption design does not guarantee that the estimate is the average causal effect one has in mind.
+\end{boxF}
+
+\subsection{Applied Examples}
+The point of applications is not to memorize literatures. It is to practice counterfactual reasoning.
+
+\paragraph{1. Minimum wage and employment.}
+Treatment is a minimum-wage increase in some states; controls are nearby or otherwise comparable states without the increase. The identifying claim is that absent the policy, employment trends would have been similar. The main threat is that treated states may already differ in labor-demand trends. Credibility improves with institutional proximity, longer pre-period evidence, and industry-specific checks.
+
+\paragraph{2. Education reform.}
+Treatment is a compulsory-schooling change or class-size reform introduced in some cohorts, districts, or regions. Controls are unaffected cohorts or places. The main threats are staggered rollout, other school-finance reforms, and selective migration. Credibility improves if treatment timing is tightly linked to legislation rather than local educational decline.
+
+\paragraph{3. Health policy.}
+Treatment is an insurance expansion, hospital payment reform, or provider incentive scheme. Controls are unaffected patients, hospitals, or regions. The main threats are coding changes, patient sorting, and simultaneous administrative reforms. Credibility improves if outcomes are defined consistently and composition is carefully tracked.
+
+\paragraph{4. Environmental regulation.}
+Treatment is exposure to a new regulation in highly regulated regions or sectors; controls are less-exposed areas. The main threat is that heavily exposed areas may already be in industrial decline. Credibility improves with evidence on pre-regulation trends and with outcome measures less sensitive to unrelated industrial restructuring.
+
+\paragraph{5. Tax or benefit reform.}
+Treatment is eligibility for a new tax credit or benefit rule; controls are ineligible but otherwise comparable groups. The main threat is anticipation, because households and firms may shift timing before the reform date. Credibility improves with a clear institutional timeline and event-study evidence showing whether behavior moved before implementation.
+
+\subsection{Difference-in-Differences Summary and Practical Takeaways}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.23\linewidth}p{0.19\linewidth}p{0.22\linewidth}p{0.23\linewidth}}
+\toprule
+Object & Identifying variation & Key assumption & Main diagnostic \\
+\midrule
+2x2 \ac{DiD} & Change in treated minus change in control & Parallel untreated trends & Four-cell means and pre-period design logic \\
+TWFE \ac{DiD} & Relative within-unit changes with time effects & Comparison units trace the right counterfactual trend & Treatment timing, control-group choice, clustered inference \\
+Event study & Dynamic relative changes by event time & Credible pre-period and valid comparison set & Pre-period coefficients, scale, and institutional timing \\
+Staggered-adoption design & Cohort-time contrasts & Not-yet-treated or never-treated units are valid controls & Check who serves as control in each period \\
+\bottomrule
+\end{tabular}
+\caption{A compact map of \ac{DiD} designs and diagnostics.}
+\label{tab:did_summary}
+\end{table}
+
+The main lessons are compact:
+\begin{enumerate}
+\item \ac{DiD} solves a comparison problem by using untreated changes to proxy for a missing counterfactual change.
+\item The causal estimand is the treated group's missing untreated post-treatment outcome, not a mechanical interaction coefficient by itself.
+\item Parallel trends is the key identifying assumption, and it concerns untreated potential outcomes.
+\item Fixed effects make the algebra convenient, but validity still depends on design, timing, and the quality of the control group.
+\item Event studies are useful for diagnosis and dynamics, but they are easy to overread.
+\item Under staggered adoption, standard two-way fixed effects can compare newly treated units to already-treated units in ways that distort interpretation.
+\end{enumerate}
+
+\subsection*{Appendix to the DiD Module}
+\hypertarget{app:did-reg}{}
+\paragraph{Appendix A1: Why the interaction coefficient equals the 2x2 \ac{DiD} contrast.}
+\hyperlink{main:did-2x2}{\textbf{Back to the canonical 2x2 design.}}
+
+Let
+\[
+\mu_{dp} = \E[y_{it}\mid D_i=d,Post_t=p], \qquad d,p \in \{0,1\}.
+\]
+Evaluate \eqref{eq:did_2x2} in each cell:
+\begin{align*}
+\mu_{00} &= \alpha, \\
+\mu_{10} &= \alpha + \gamma, \\
+\mu_{01} &= \alpha + \lambda, \\
+\mu_{11} &= \alpha + \gamma + \lambda + \delta.
+\end{align*}
+Subtract the pre-period treated-control gap from the post-period treated-control gap:
+\begin{align*}
+(\mu_{11}-\mu_{01})-(\mu_{10}-\mu_{00})
+&=
+\big(\alpha+\gamma+\lambda+\delta-(\alpha+\lambda)\big) \\
+&\qquad - \big((\alpha+\gamma)-\alpha\big) \\
+&= \delta.
+\end{align*}
+Equivalently,
+\[
+\delta = (\mu_{11}-\mu_{10})-(\mu_{01}-\mu_{00}),
+\]
+which is exactly the population version of \eqref{eq:did_algebra}. So the interaction coefficient is not a mysterious regression artifact; it is simply the double difference written in linear-model notation.
+
+\hypertarget{app:did-att}{}
+\paragraph{Appendix A2: Deriving the $ATT$ under parallel trends.}
+\hyperlink{main:did-po}{\textbf{Back to the potential-outcomes discussion.}}
+
+Start from the population \ac{DiD} contrast:
+\[
+\Delta^{DiD}
+=
+\Big(\E[Y_{i,post}\mid D_i=1]-\E[Y_{i,pre}\mid D_i=1]\Big)
+-\Big(\E[Y_{i,post}\mid D_i=0]-\E[Y_{i,pre}\mid D_i=0]\Big).
+\]
+Because treated units are untreated in the pre period,
+\[
+Y_{i,pre}=Y_{i,pre}(0).
+\]
+Because control units are untreated in both periods,
+\[
+Y_{i,post}=Y_{i,post}(0), \qquad Y_{i,pre}=Y_{i,pre}(0)
+\quad \text{when } D_i=0.
+\]
+For treated units in the post period,
+\[
+Y_{i,post}=Y_{i,post}(1).
+\]
+Substitute these relations into $\Delta^{DiD}$:
+\begin{align*}
+\Delta^{DiD}
+&=
+\Big(\E[Y_{i,post}(1)\mid D_i=1]-\E[Y_{i,pre}(0)\mid D_i=1]\Big) \\
+&\qquad - \Big(\E[Y_{i,post}(0)\mid D_i=0]-\E[Y_{i,pre}(0)\mid D_i=0]\Big).
+\end{align*}
+Add and subtract $\E[Y_{i,post}(0)\mid D_i=1]$:
+\begin{align*}
+\Delta^{DiD}
+&=
+\Big(\E[Y_{i,post}(1)\mid D_i=1]-\E[Y_{i,post}(0)\mid D_i=1]\Big) \\
+&\qquad + \Big(\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1] \\
+&\qquad\qquad - \E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0]\Big).
+\end{align*}
+The first bracket is exactly the average treatment effect on the treated in the post period:
+\[
+ATT = \E[Y_{i,post}(1)-Y_{i,post}(0)\mid D_i=1].
+\]
+The second bracket is the difference in untreated trends across treated and control groups. Under parallel trends \eqref{eq:parallel_trends}, that term is zero, and therefore
+\[
+\Delta^{DiD} = ATT.
+\]
+This derivation makes the role of the assumption transparent: it is the step that lets the control group's untreated change stand in for the treated group's missing untreated change.
 
 \subsection{Random Effects}
 Random effects keep the unobserved-effects structure
@@ -1357,6 +1744,413 @@ Lecture 2 adds a causal and dynamic layer to the panel toolkit:
 \end{itemize}
 
 The common theme is that richer empirical questions require stronger design assumptions. Modern panel methods are powerful because they encode those assumptions explicitly, not because the panel structure alone guarantees causal interpretation.
+
+\section{Lecture 3: Synthetic Control}
+
+\subsection{Synthetic Control and the Comparison Problem}
+Synthetic control is designed for a setting that is common in applied policy work and awkward for standard panel methods: treatment affects one unit, or a very small number of units, and no single untreated unit looks like an obviously credible comparison.
+
+Suppose one state adopts a major tobacco-control law. We observe what happens in that treated state after the law. We do not observe what would have happened in that same state had the law not been adopted. That is the familiar counterfactual problem. But now there is an additional difficulty: if no single untreated state tracks the treated state's pre-treatment path closely, a simple treated-versus-control comparison is hard to defend.
+
+The before-after comparison
+\begin{equation}
+Y_{1,post}-Y_{1,pre}
+\label{eq:sc_before_after}
+\end{equation}
+is contaminated by aggregate shocks, long-run secular trends, and any other post-period forces unrelated to treatment. A single-control comparison is often just as fragile, because the choice of control can become arbitrary.
+
+\begin{boxD}
+\textbf{Why this matters.}
+One treated unit is not an easy special case of panel econometrics. It is often a harder case, because the entire design hinges on whether the untreated comparison is genuinely credible.
+\end{boxD}
+
+The synthetic-control idea is simple: rather than selecting one untreated unit informally, construct a weighted average of untreated donor units so that the resulting synthetic unit reproduces the treated unit's pre-treatment characteristics and pre-treatment outcome path as closely as possible.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=0.9cm,y=0.7cm]
+\draw[->] (0,0) -- (8.6,0) node[right] {time};
+\draw[->] (0,0) -- (0,4.2) node[above] {outcome};
+\draw[dashed] (5.2,0) -- (5.2,3.9);
+\node[below] at (2.2,0) {pre};
+\node[below] at (6.9,0) {post};
+\node[above] at (5.2,3.9) {$T_0$};
+\draw[thick,main] (0.6,1.1) -- (1.6,1.5) -- (2.6,1.8) -- (3.6,2.1) -- (4.6,2.4) -- (7.8,3.5);
+\draw[thick,warn] (0.6,0.9) -- (1.6,1.4) -- (2.6,1.8) -- (3.6,2.0) -- (4.6,2.4) -- (7.8,2.5);
+\draw[thin,gray] (0.6,0.7) -- (1.6,1.1) -- (2.6,1.5) -- (3.6,1.9) -- (4.6,2.0) -- (7.8,2.2);
+\draw[thin,gray] (0.6,1.4) -- (1.6,1.8) -- (2.6,2.0) -- (3.6,2.3) -- (4.6,2.6) -- (7.8,2.8);
+\node[main,right] at (7.85,3.5) {treated};
+\node[warn,right] at (7.85,2.5) {synthetic};
+\node[gray,right] at (7.85,2.2) {donors};
+\end{tikzpicture}
+\caption{Synthetic control builds a weighted untreated comparison that tracks the treated unit closely before treatment.}
+\label{fig:sc_paths_intro}
+\end{figure}
+
+\begin{boxF}
+\textbf{Common mistake.}
+A synthetic control is not the untreated unit with the closest average level. It is a weighted combination chosen to reproduce the treated unit's pre-treatment features and trajectory.
+\end{boxF}
+
+\subsection{Constructing the Synthetic Control}
+\hypertarget{main:sc-weights}{}
+Let unit $1$ be treated, and let units $j=2,\ldots,J+1$ be untreated donor units. Treatment begins after period $T_0$, so the pre-treatment periods are $t=1,\ldots,T_0$ and the post-treatment periods are $t=T_0+1,\ldots,T$.
+
+The synthetic control is a weighted average of donor outcomes:
+\begin{equation}
+\widehat{Y}_{1t}(0)
+=
+\sum_{j=2}^{J+1} w_j Y_{jt},
+\qquad t \leq T_0 \text{ and, by extrapolation, } t > T_0,
+\label{eq:sc_synth_outcome}
+\end{equation}
+where the weights satisfy
+\begin{equation}
+w_j \geq 0, \qquad \sum_{j=2}^{J+1} w_j = 1.
+\label{eq:sc_weight_restrictions}
+\end{equation}
+
+These restrictions matter. Nonnegative weights that sum to one ensure that the synthetic unit is a convex combination of actual untreated units. This keeps the comparison transparent and avoids unstable extrapolation based on negative weights or arbitrary linear projections.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Donor unit & Weight & Interpretation \\
+\midrule
+State A & 0.45 & largest contributor to the synthetic control \\
+State B & 0.30 & helps match medium-run pre-treatment path \\
+State C & 0.15 & improves predictor balance \\
+State D & 0.10 & fine-tunes pre-treatment fit \\
+\bottomrule
+\end{tabular}
+\caption{A stylized donor-weights table for a synthetic-control design.}
+\label{tab:sc_weights}
+\end{table}
+
+The immediate intuition is straightforward. If no single donor matches the treated unit well, perhaps a weighted combination will. One donor may resemble the treated unit in baseline levels, another in medium-run dynamics, and a third in observed predictors such as income, industry composition, or population structure. The synthetic unit pools those strengths.
+
+\begin{boxD}
+\textbf{Why this matters.}
+The method does not ask us to believe that one untreated unit is ``the control.'' It asks whether a transparent weighted average of untreated units can reproduce the treated unit's pre-treatment path well enough to serve as a credible missing untreated outcome.
+\end{boxD}
+
+\subsection{Potential Outcomes and the Synthetic-Control Estimand}
+\hypertarget{main:sc-po}{}
+To keep the causal object explicit, return to potential outcomes. Let $Y_{1t}(0)$ denote the untreated potential outcome for the treated unit and $Y_{1t}(1)$ the treated potential outcome. For donor units, assume they remain untreated during the evaluation window, so we observe their untreated outcomes.
+
+The object of interest for each post-treatment period is
+\begin{equation}
+\tau_{1t}
+=
+Y_{1t}(1)-Y_{1t}(0),
+\qquad t > T_0.
+\label{eq:sc_treatment_effect}
+\end{equation}
+The problem is again the same missing-data problem as in \ac{DiD}: after treatment starts, we observe $Y_{1t}(1)$ but not $Y_{1t}(0)$.
+
+Synthetic control estimates the missing untreated path with the weighted donor average, yielding
+\begin{equation}
+\hat{\tau}_{1t}
+=
+Y_{1t} - \sum_{j=2}^{J+1}\hat{w}_j Y_{jt},
+\qquad t > T_0.
+\label{eq:sc_effect_estimator}
+\end{equation}
+
+This estimator is best understood as a constructed counterfactual path, not as a regression coefficient. The entire design lives or dies on whether the weighted donor path is a credible proxy for $Y_{1t}(0)$ after treatment.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Synthetic control does not begin from a parallel-trends coefficient restriction. It begins from a reconstruction problem: can untreated donors be combined so that the treated unit's missing untreated path is well approximated?
+\end{boxD}
+
+\subsection{Optimization, Weights, and Pre-Treatment Fit}
+The practical problem is how to choose the donor weights. Let $X_1$ be a vector of pre-treatment characteristics for the treated unit and let $X_0$ be the corresponding matrix for the donor pool. These predictors often include averages of observed covariates and, crucially, lagged values of the outcome itself.
+
+Weights are typically chosen by solving
+\begin{equation}
+\min_{W} (X_1 - X_0W)'V(X_1 - X_0W)
+\label{eq:sc_objective}
+\end{equation}
+subject to \eqref{eq:sc_weight_restrictions}, where $W=(w_2,\ldots,w_{J+1})'$ and $V$ is a positive semidefinite weighting matrix assigning relative importance to predictor mismatch.
+
+Equation \eqref{eq:sc_objective} says that the method looks for donor weights that make the treated unit and the synthetic unit as similar as possible before treatment, where similarity is judged in economically chosen dimensions. If the pre-treatment outcomes are included heavily in $X_1$ and $X_0$, then the method is explicitly trying to match the path of the treated unit before treatment.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Predictor & Treated unit & Synthetic control \\
+\midrule
+Average pre-treatment outcome & 121.4 & 120.9 \\
+Income per capita & 42.0 & 41.8 \\
+Manufacturing share & 0.19 & 0.20 \\
+Urbanization rate & 0.73 & 0.71 \\
+\bottomrule
+\end{tabular}
+\caption{A stylized predictor-balance table for synthetic control.}
+\label{tab:sc_balance}
+\end{table}
+
+\paragraph{Why pre-treatment fit matters.}
+If the synthetic unit tracks the treated unit closely before treatment, then it becomes more plausible that the weighted donor combination is reproducing not only observed predictors but also the underlying latent forces driving the untreated outcome path. Lagged outcomes are often powerful summary statistics for those latent forces.
+
+\paragraph{But fit is not everything.}
+Good fit is evidence, not proof. It is possible to match a short pre-treatment path for accidental reasons, or to obtain decent fit while still relying on a donor pool that is economically inappropriate. Conversely, poor pre-treatment fit is a serious warning sign. If the synthetic unit cannot reproduce the treated path before treatment, it is difficult to argue that it should recover the missing untreated path after treatment.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Good visual fit is not a theorem. It increases credibility, but it does not eliminate concerns about anticipation, donor contamination, or post-treatment shocks that differentially affect the treated unit for unrelated reasons.
+\end{boxF}
+
+The geometric intuition behind the convex-combination restriction is useful: the treated unit should lie in or near the convex hull of the donor units in the space of pre-treatment predictors and outcomes. If the treated unit lies far outside that hull, the method is being asked to construct a comparison that the donor pool simply cannot supply. A slightly fuller discussion is placed in \hyperlink{app:sc-geom}{\textbf{Appendix S1}}.
+
+\subsection{Synthetic Control versus Difference-in-Differences and Matching}
+Synthetic control belongs to the same broad family of comparative counterfactual designs as matching and \ac{DiD}, but it solves a different practical problem.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.19\linewidth}p{0.20\linewidth}p{0.23\linewidth}p{0.22\linewidth}}
+\toprule
+Method & Comparison unit & Key identifying logic & Main diagnostic emphasis \\
+\midrule
+Matching & one or a few matched units & treated and controls are similar on observables & covariate balance \\
+\ac{DiD} & untreated group over time & untreated trends for treated and control groups would have moved in parallel & pre-treatment trends and design argument \\
+Synthetic control & weighted donor combination & a synthetic unit can reconstruct the treated unit's untreated path & pre-treatment fit and placebo gaps \\
+\bottomrule
+\end{tabular}
+\caption{Synthetic control in relation to matching and \ac{DiD}.}
+\label{tab:sc_compare_methods}
+\end{table}
+
+Relative to \ac{DiD}, synthetic control is especially attractive when the number of treated units is very small and long pre-treatment histories are available. Rather than asserting that an untreated group's average trend is the right counterfactual, the method attempts to build a customized untreated comparison from donor weights.
+
+Relative to standard regressions, the weight restrictions make the comparison more transparent. A linear regression can match the treated unit by extrapolating outside the support of the donor units, often with negative implicit weights. Synthetic control is usually more disciplined because it keeps the synthetic unit inside the range spanned by untreated donors.
+
+\begin{boxD}
+\textbf{Why this matters.}
+Synthetic control is attractive precisely when ordinary specifications feel too parametric or too coarse. It lets the data construct the comparison unit while keeping the construction visible to the reader.
+\end{boxD}
+
+\subsection{Diagnostics, Placebos, and Inference}
+Synthetic-control evidence is not usually judged by default heteroskedasticity-robust standard errors. The number of treated units is often one, and the main empirical question is comparative: is the treated-unit post-treatment gap unusually large relative to what we would see if treatment were reassigned to untreated units?
+
+\paragraph{Path plots and gap plots.}
+The first diagnostic is always graphical. Plot the treated unit and the synthetic unit over time. Then plot the post-treatment gap
+\[
+Gap_t = Y_{1t} - \sum_{j=2}^{J+1}\hat{w}_jY_{jt}.
+\]
+If the paths track each other closely before treatment and diverge only after treatment, that is the basic pattern the design hopes to uncover.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=0.85cm,y=0.65cm]
+\draw[->] (0,0) -- (8.8,0) node[right] {time};
+\draw[->] (0,-0.4) -- (0,4.1) node[above] {outcome};
+\draw[dashed] (5.0,-0.1) -- (5.0,3.8);
+\node[below] at (2.0,0) {pre};
+\node[below] at (6.8,0) {post};
+\node[above] at (5.0,3.8) {$T_0$};
+\draw[thick,main] (0.5,1.0) -- (1.4,1.3) -- (2.3,1.8) -- (3.2,2.0) -- (4.2,2.4) -- (5.8,2.9) -- (6.8,3.4) -- (7.8,3.7);
+\draw[thick,warn] (0.5,0.9) -- (1.4,1.2) -- (2.3,1.7) -- (3.2,2.0) -- (4.2,2.4) -- (5.8,2.5) -- (6.8,2.4) -- (7.8,2.3);
+\node[main,right] at (7.85,3.7) {treated};
+\node[warn,right] at (7.85,2.3) {synthetic};
+\end{tikzpicture}
+\caption{A canonical synthetic-control result: close pre-treatment fit and post-treatment divergence.}
+\label{fig:sc_main_plot}
+\end{figure}
+
+\paragraph{Placebo tests.}
+The standard inferential device is an in-space placebo exercise. Reassign treatment to each donor unit one at a time, construct that donor's synthetic control using the remaining untreated units, and compute its post-treatment gap. This produces a distribution of placebo gaps against which the treated-unit gap can be compared.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=0.85cm,y=0.65cm]
+\draw[->] (0,-2.2) -- (8.8,-2.2) node[right] {time};
+\draw[->] (0,-2.2) -- (0,2.2) node[above] {gap};
+\draw[dashed] (5.0,-2.2) -- (5.0,2.0);
+\draw[thick,main] (0.5,0.0) -- (1.5,0.1) -- (2.4,-0.05) -- (3.3,0.08) -- (4.2,0.02) -- (5.8,0.5) -- (6.8,1.2) -- (7.8,1.5);
+\draw[thin,gray] (0.5,0.0) -- (1.5,-0.15) -- (2.4,0.12) -- (3.3,-0.05) -- (4.2,0.1) -- (5.8,0.2) -- (6.8,0.3) -- (7.8,0.1);
+\draw[thin,gray] (0.5,0.0) -- (1.5,0.06) -- (2.4,-0.1) -- (3.3,0.02) -- (4.2,-0.05) -- (5.8,-0.2) -- (6.8,-0.1) -- (7.8,0.0);
+\draw[thin,gray] (0.5,0.0) -- (1.5,0.04) -- (2.4,0.1) -- (3.3,-0.07) -- (4.2,0.03) -- (5.8,0.15) -- (6.8,0.1) -- (7.8,0.25);
+\node[main,right] at (7.85,1.5) {treated gap};
+\node[gray,right] at (7.85,0.25) {placebos};
+\end{tikzpicture}
+\caption{Placebo-gap logic: the treated-unit post-treatment gap should stand out relative to placebo gaps with similar pre-treatment fit.}
+\label{fig:sc_placebos}
+\end{figure}
+
+\paragraph{Pre-treatment fit and gap scaling.}
+Placebo exercises are only informative when the placebo units have acceptable pre-treatment fit. If a donor unit cannot itself be well approximated by a synthetic control, its placebo gap is not a useful benchmark. This is why applied work often reports pre-treatment and post-treatment root mean squared prediction error comparisons.
+
+\paragraph{Sensitivity analysis.}
+Good synthetic-control practice includes at least three additional checks:
+\begin{itemize}
+\item \textbf{Donor-pool sensitivity.} Does the result survive reasonable changes in the set of eligible donors?
+\item \textbf{Predictor sensitivity.} Does the result survive reasonable changes in the predictor set or in how pre-treatment outcomes are weighted?
+\item \textbf{Leave-one-out analysis.} Does the result disappear if the largest-weight donor is removed?
+\end{itemize}
+
+\begin{boxD}
+\textbf{Why this matters.}
+A large post-treatment gap means little if pre-treatment fit is poor. Synthetic-control diagnostics are not optional embellishments; they are part of the identification argument.
+\end{boxD}
+
+\begin{boxF}
+\textbf{Common mistake.}
+Placebo exercises are comparative diagnostics, not magic p-values. They help us judge whether the treated-unit gap is unusually large relative to plausible untreated alternatives, but they do not replace economic reasoning about the design.
+\end{boxF}
+
+\subsection{Threats to Credibility and Design Limits}
+The method is attractive, but it is not automatic. The main threats are easy to state once the logic of the design is clear.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.23\linewidth}p{0.28\linewidth}p{0.31\linewidth}}
+\toprule
+Threat & Why it is dangerous & What helps assess credibility \\
+\midrule
+Poor pre-treatment fit & Synthetic path does not approximate the treated path even before treatment. & Longer pre-treatment horizon, balance tables, and path plots. \\
+Donor contamination & Donor units are indirectly affected by the treatment or a related shock. & Careful donor-pool construction and institutional discussion. \\
+Anticipation & Treated unit adjusts before the formal intervention date. & Clear policy timeline and exclusion of contaminated pre-period observations. \\
+Outside convex hull & Treated unit cannot be reconstructed by a convex combination of donors. & Inspect weight concentration and fit quality; reconsider donor pool. \\
+Short pre-treatment period & Matching may look good accidentally because little history is available. & Use as long a pre-treatment history as defensible. \\
+Unrelated structural break & Post-treatment treated-unit shock is not caused by treatment. & Institutional narrative, placebo dates, and auxiliary outcomes. \\
+\bottomrule
+\end{tabular}
+\caption{Main threats to credibility in synthetic-control designs.}
+\label{tab:sc_threats}
+\end{table}
+
+\paragraph{Poor pre-treatment fit.}
+This is the clearest red flag. If the synthetic unit fails before treatment, it is very hard to defend it after treatment.
+
+\paragraph{Donor-pool contamination.}
+If the donors are themselves touched by the policy, exposed through spillovers, or affected by the same reform package, then they are not untreated counterfactuals. The method cannot repair a contaminated donor pool by optimization alone.
+
+\paragraph{Outside the convex hull.}
+Sometimes the treated unit is simply too unusual. In that case most of the weight may pile onto one or two implausible donors, or fit may remain poor even after optimization. That is not a minor nuisance. It means the comparison problem may not be solvable with the available donor pool.
+
+\paragraph{Short pre-treatment windows and structural breaks.}
+With very little pre-treatment data, the method can overstate credibility because many donor combinations may fit a short path by chance. And even with excellent fit, a large post-treatment gap is not necessarily causal if a non-treatment structural break hits the treated unit at the same time.
+
+\begin{boxF}
+\textbf{Common mistake.}
+Synthetic control does not rescue a bad research design. If the donor pool is economically inappropriate or if the treated unit is fundamentally incomparable, the optimization problem will still produce weights, but those weights do not create credibility.
+\end{boxF}
+
+\subsection{Extensions and Modern Variants}
+The original synthetic-control method was developed for the case of one treated unit and a small donor pool, but the underlying idea has generated a broader family of approaches.
+
+\paragraph{Multiple treated units.}
+When several units are treated, one can aggregate treated units, build separate synthetic controls, or use methods designed for multi-treated settings.
+
+\paragraph{Augmented synthetic control.}
+One limitation of the original method is that convex-combination restrictions can produce imperfect fit when the treated unit lies near but not inside the donor convex hull. Augmented approaches combine synthetic control with outcome-model adjustment to reduce bias from residual mismatch.
+
+\paragraph{Interactive fixed effects and matrix completion.}
+These methods generalize the idea that untreated outcomes may be driven by latent common factors with unit-specific loadings. Conceptually, they sit near synthetic control because they also try to reconstruct missing untreated outcomes using the panel's low-rank structure.
+
+\paragraph{Synthetic \ac{DiD}.}
+This newer bridge method combines ideas from \ac{DiD} and synthetic control, weighting units and sometimes periods to improve balance before applying a difference-in-differences style comparison. The practical lesson is not software taxonomy. It is that modern causal panel methods increasingly focus on constructing better comparison objects rather than simply running standard regressions.
+
+\subsection{Applied Examples}
+The purpose of applications is to sharpen judgment about when synthetic control is persuasive.
+
+\paragraph{1. Tobacco control and cigarette consumption.}
+Treatment is a major anti-smoking law in one state. The donor pool is untreated states over the same period. Synthetic control is attractive because no single comparison state closely tracks the treated state's smoking path before the law. The key concern is that public-health attitudes may already have been evolving differently in the treated state.
+
+\paragraph{2. German reunification and macroeconomic outcomes.}
+Treatment is reunification for West Germany or unified Germany, depending on the design. The donor pool is a set of comparable developed economies. Synthetic control is attractive because no single country is an obvious counterfactual. The main concern is that the historical event may also alter international spillovers and comparison-country dynamics.
+
+\paragraph{3. Terrorism, conflict, or violence shocks.}
+Treatment is a conflict shock to one region or country. The donor pool is untreated regions or countries. Synthetic control is attractive because such shocks are often concentrated in one location. The main concern is donor contamination through trade, migration, or regional instability.
+
+\paragraph{4. Congestion pricing or urban transport reform.}
+Treatment is a major city-level transport intervention. The donor pool is comparable untreated cities. The main attraction is that the treated city may be unique, making naive city-by-city comparisons weak. The main concern is that broader urban trends or complementary investments may coincide with the reform.
+
+\paragraph{5. Environmental or public-health regulation.}
+Treatment is a state or country regulation affecting pollution, emissions, or health behavior. The donor pool is untreated jurisdictions. The key concern is whether the treated jurisdiction was already on a distinct path because of industry composition or prior regulatory momentum.
+
+\subsection{Synthetic Control Summary and Practical Takeaways}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.18\linewidth}p{0.22\linewidth}p{0.24\linewidth}}
+\toprule
+Object & Identifying logic & Main diagnostic & Main threat \\
+\midrule
+Synthetic path & weighted donor combination approximates untreated treated-unit path & close pre-treatment fit & poor donor support \\
+Post-treatment gap & treated minus synthetic path after $T_0$ & divergence after treatment with stable pre-fit & unrelated structural break \\
+Placebo comparison & treated gap is unusual relative to donor-placebo gaps & treated gap stands out among well-fit placebos & poor placebo comparability \\
+Sensitivity analysis & result survives reasonable design changes & donor and predictor robustness & fragile dependence on one donor or one specification \\
+\bottomrule
+\end{tabular}
+\caption{A compact map of the synthetic-control design.}
+\label{tab:sc_summary}
+\end{table}
+
+The main lessons are compact:
+\begin{enumerate}
+\item Synthetic control is a transparent way to build a comparison unit when no single untreated unit is credible.
+\item The method estimates a missing untreated path, not a regression coefficient with automatic causal meaning.
+\item Pre-treatment fit is central because the method is credible only if the treated unit is well reconstructed before treatment.
+\item Good fit is persuasive evidence, not definitive proof.
+\item Diagnostics, placebo exercises, and donor-pool sensitivity are part of the identification argument, not optional extras.
+\end{enumerate}
+
+\subsection*{Appendix to the Synthetic Control Module}
+\hypertarget{app:sc-geom}{}
+\paragraph{Appendix S1: Geometry and the convex-hull intuition.}
+\hyperlink{main:sc-weights}{\textbf{Back to the synthetic-control construction.}}
+
+The convex-combination restriction in \eqref{eq:sc_weight_restrictions} means that the synthetic unit must lie inside the set of all weighted averages of donor predictors and donor pre-treatment outcomes. Geometrically, that set is the convex hull of the donor units.
+
+This matters because it clarifies what the method can and cannot do. If the treated unit lies inside that hull, then exact or near-exact pre-treatment matching may be possible without extrapolation. If it lies outside the hull, the method can only approximate it imperfectly. In applied work, persistent poor fit, extreme concentration on one donor, or instability under small donor-pool changes are often signs that the treated unit is poorly supported by the donors.
+
+\hypertarget{app:sc-formal}{}
+\paragraph{Appendix S2: A formal potential-outcomes view.}
+\hyperlink{main:sc-po}{\textbf{Back to the synthetic-control estimand.}}
+
+Suppose treatment begins after $T_0$ and only unit $1$ is treated. For post-treatment dates $t>T_0$, observed outcomes satisfy
+\[
+Y_{1t} = Y_{1t}(1),
+\qquad
+Y_{jt} = Y_{jt}(0) \text{ for } j=2,\ldots,J+1.
+\]
+The target effect is
+\[
+\tau_{1t} = Y_{1t}(1)-Y_{1t}(0).
+\]
+Because $Y_{1t}(0)$ is unobserved after treatment, synthetic control approximates it by
+\[
+\widehat{Y}_{1t}(0) = \sum_{j=2}^{J+1}\hat{w}_j Y_{jt}.
+\]
+This yields the estimator
+\[
+\hat{\tau}_{1t}=Y_{1t}-\widehat{Y}_{1t}(0).
+\]
+The identifying content of the method is therefore concentrated in one empirical claim: the weighted donor combination chosen from pre-treatment information remains a credible approximation to the treated unit's untreated post-treatment path. The more convincingly the pre-treatment data and institutional context support that claim, the more persuasive the resulting treatment-effect path becomes.
+
+\subsection{Lecture 3 Summary}
+Lecture 3 adds a transparent small-treated-sample design to the panel toolkit:
+\begin{itemize}
+\item synthetic control constructs a weighted untreated comparison when no single control is convincing;
+\item the method is built around reconstructing the treated unit's untreated path from donor units;
+\item pre-treatment fit is the key diagnostic because it disciplines the counterfactual construction;
+\item placebo and sensitivity exercises are part of the design argument;
+\item the method is strongest when the donor pool is credible, the pre-treatment window is long, and the treated unit is well supported by the donor data.
+\end{itemize}
+
+\begin{boxD}
+\textbf{Why this matters.}
+Synthetic control extends the central theme of the course. Good econometrics is not a search for more complicated regressions. It is a search for more credible comparisons.
+\end{boxD}
 
 \section{Worked Examples}
 
