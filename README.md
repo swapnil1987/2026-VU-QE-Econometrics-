@@ -8,7 +8,7 @@
 |-------|-------|--------|
 | Instrumental Variables | - | [Slides](lectures/lecture_iv.pdf) |
 | IV Practice | - | [Practice Problems](lectures/iv_practice.pdf) |
-| Panel Data | [Lecture Notes](lectures/panel-data-notes.pdf) | [Slides](lectures/lecture_panel_data_1.pdf) |
+| Panel Data | [Lecture Notes](lectures/panel-data-notes.pdf) | [Lecture 1 Slides](lectures/lecture_panel_data_1.pdf), [Lecture 2 Slides](lectures/lecture_panel_data_2.pdf) |
 
 ## Exam
 
