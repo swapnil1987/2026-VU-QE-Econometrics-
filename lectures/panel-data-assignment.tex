@@ -1,0 +1,698 @@
+% =============================================================
+% Assignment: Panel Data Econometrics
+% Course: Quantitative Economics, Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage[many]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ATT}{\operatorname{ATT}}
+\newcommand{\plim}{\operatorname*{plim}}
+
+\definecolor{main}{HTML}{3F6EA7}
+\definecolor{sub}{HTML}{F2F7FD}
+\definecolor{sub2}{HTML}{FFF5E8}
+\definecolor{warn}{HTML}{C7771B}
+
+\tcbset{
+  enhanced,
+  breakable,
+  boxrule=0.5pt,
+  arc=2pt,
+  left=9pt,
+  right=9pt,
+  top=7pt,
+  bottom=7pt,
+  before skip=0.25cm,
+  after skip=0.35cm
+}
+
+\newtcolorbox{assignmentbox}{
+  colback=sub,
+  colframe=main!35,
+  borderline west={2.2pt}{0pt}{main}
+}
+
+\newtcolorbox{solutionbox}{
+  colback=sub2,
+  colframe=warn!35,
+  borderline west={2.2pt}{0pt}{warn}
+}
+
+\title{Panel Data Econometrics: Assignment with Solutions}
+\author{Swapnil Singh}
+\date{Vilnius University, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{assignmentbox}
+\textbf{Scope.} This assignment covers the panel-data material in the slides and notes: within and between variation, pooled OLS bias, fixed effects, first differences, two-way fixed effects, difference-in-differences, random effects, correlated random effects, dynamic panels, and synthetic control. It deliberately excludes the uncertainty-quantification material.
+\end{assignmentbox}
+
+\begin{assignmentbox}
+\textbf{Instructions.} Answer all questions. The problems are ordered from easier mechanical questions to harder design and interpretation questions. Whenever a question asks for an interpretation, write the interpretation in econometric language and in the language of the application.
+\end{assignmentbox}
+
+\section*{Problems}
+
+\subsection*{Problem 1. Panel data and the comparison being made}
+
+A researcher wants to estimate the effect of training hours on wages. She observes workers in several years and considers the model
+\[
+Wage_{it}=\beta Train_{it}+\alpha_i+u_{it},
+\]
+where $\alpha_i$ is permanent worker ability.
+
+\begin{enumerate}[label=(\alph*)]
+\item Explain why a cross-sectional comparison of high-training and low-training workers may be biased.
+\item Explain what panel data allow the researcher to compare instead.
+\item State one condition under which panel methods do not solve the problem.
+\end{enumerate}
+
+\subsection*{Problem 2. Within and between variation}
+
+Consider the following balanced panel:
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+Unit $i$ & Period $t$ & $x_{it}$ & $y_{it}$ \\
+\midrule
+A & 1 & 2 & 5 \\
+A & 2 & 4 & 7 \\
+A & 3 & 6 & 9 \\
+B & 1 & 8 & 4 \\
+B & 2 & 8 & 5 \\
+B & 3 & 8 & 6 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=(\alph*)]
+\item Compute $\bar{x}_A$, $\bar{x}_B$, and the grand mean $\bar{x}$.
+\item For each observation, compute the within component $x_{it}-\bar{x}_i$.
+\item Which unit identifies the fixed-effects slope from $x$? Which unit contributes no within variation in $x$?
+\item Explain why pooled OLS and fixed effects may answer different questions in this example.
+\end{enumerate}
+
+\subsection*{Problem 3. Pooled OLS bias in the unobserved-effects model}
+
+Suppose the true scalar model is
+\[
+y_{it}=\beta x_{it}+\alpha_i+u_{it},
+\]
+with $\E[u_{it}\mid x_{it},\alpha_i]=0$. A researcher estimates pooled OLS, ignoring $\alpha_i$.
+
+\begin{enumerate}[label=(\alph*)]
+\item Derive the probability limit of the pooled OLS estimator.
+\item Under what condition on $x_{it}$ and $\alpha_i$ is pooled OLS consistent?
+\item Suppose $x_{it}$ is school spending, $y_{it}$ is student achievement, and $\alpha_i$ is persistent school quality. If high-quality schools spend more, what is the likely direction of pooled OLS bias when $\alpha_i$ raises achievement?
+\end{enumerate}
+
+\subsection*{Problem 4. Fixed effects and time-invariant regressors}
+
+Start from the model
+\[
+y_{it}=x_{it}'\beta+z_i'\gamma+\alpha_i+u_{it},
+\]
+where $z_i$ is constant over time within unit.
+
+\begin{enumerate}[label=(\alph*)]
+\item Write the within-transformed equation.
+\item Show explicitly why $z_i$ disappears.
+\item Explain the tradeoff: what bias problem does fixed effects address, and what parameter can it no longer estimate?
+\end{enumerate}
+
+\subsection*{Problem 5. Fixed effects and first differences}
+
+Consider the model
+\[
+y_{it}=\beta x_{it}+\alpha_i+u_{it}.
+\]
+
+\begin{enumerate}[label=(\alph*)]
+\item Write the first-differenced equation.
+\item Show that fixed effects and first differences use the same identifying variation when $T=2$.
+\item Give one reason first differences might be attractive relative to fixed effects.
+\item Give one reason first differences might be unattractive relative to fixed effects.
+\end{enumerate}
+
+\subsection*{Problem 6. Two-way fixed effects and what remains}
+
+Consider
+\[
+y_{it}=\beta x_{it}+\alpha_i+\lambda_t+u_{it}.
+\]
+The following regressor values are observed:
+
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+ & $t=1$ & $t=2$ & $t=3$ \\
+\midrule
+$i=A$ & 1 & 3 & 5 \\
+$i=B$ & 2 & 4 & 6 \\
+$i=C$ & 3 & 5 & 7 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=(\alph*)]
+\item Show that this regressor can be written as $x_{it}=a_i+b_t$.
+\item Compute the two-way demeaned value
+\[
+\tilde{x}_{it}=x_{it}-\bar{x}_i-\bar{x}_t+\bar{x}
+\]
+for all cells.
+\item Can $\beta$ be identified from this regressor under two-way fixed effects? Explain.
+\end{enumerate}
+
+\subsection*{Problem 7. Choosing the right panel estimator}
+
+For each setting, choose the most natural starting estimator among pooled OLS, fixed effects, first differences, and two-way fixed effects. Give a one-paragraph justification.
+
+\begin{enumerate}[label=(\alph*)]
+\item Worker wages and training, where permanent ability is likely correlated with training.
+\item Firm investment and cash flow during years that include a large national boom.
+\item City pollution and local regulation, where the key regressor changes only once and there are strong city-level permanent differences.
+\item Household consumption and income growth, where the question is explicitly about year-to-year changes.
+\end{enumerate}
+
+\subsection*{Problem 8. Difference-in-differences arithmetic}
+
+A policy is adopted by treated regions after the pre period. The outcome is employment.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+ & Pre & Post \\
+\midrule
+Control regions & 60 & 64 \\
+Treated regions & 70 & 78 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[label=(\alph*)]
+\item Compute the treated before-after change.
+\item Compute the post-period treated-control difference.
+\item Compute the difference-in-differences estimate.
+\item Explain why the first two comparisons are not generally causal.
+\end{enumerate}
+
+\subsection*{Problem 9. Difference-in-differences and potential outcomes}
+
+Let $D_i=1$ for treated units. Treatment occurs only in the post period. Define
+\[
+\ATT=\E[Y_{i,post}(1)-Y_{i,post}(0)\mid D_i=1].
+\]
+
+\begin{enumerate}[label=(\alph*)]
+\item Write the observed DiD contrast in expectation.
+\item Show that the DiD contrast equals the ATT plus a bias term.
+\item State the parallel-trends assumption that makes the bias term equal zero.
+\item Explain why parallel trends is a statement about untreated potential outcomes, not observed post-treatment outcomes.
+\end{enumerate}
+
+\subsection*{Problem 10. Diagnosing a DiD design}
+
+A country introduces a payroll-tax cut in regions with high unemployment in 2026. A researcher compares employment changes in high-unemployment treated regions to low-unemployment untreated regions from 2024 to 2027.
+
+\begin{enumerate}[label=(\alph*)]
+\item What is the main parallel-trends concern?
+\item Give two pieces of pre-treatment evidence or institutional information that would make the design more credible.
+\item Suppose firms anticipated the tax cut in late 2025 and adjusted hiring before the official implementation date. What happens to the DiD design?
+\item Suggest one redesign that improves the counterfactual comparison.
+\end{enumerate}
+
+\subsection*{Problem 11. Random effects, fixed effects, and Mundlak}
+
+Consider
+\[
+y_{it}=x_{it}\beta+\alpha_i+u_{it}.
+\]
+
+\begin{enumerate}[label=(\alph*)]
+\item State the key random-effects assumption about $\alpha_i$ and the regressor path.
+\item Why can random effects estimate coefficients on time-invariant regressors while fixed effects cannot?
+\item Write a correlated random-effects model in which $\alpha_i$ depends on the unit mean $\bar{x}_i$.
+\item Explain how the coefficient on $\bar{x}_i$ helps diagnose whether the random-effects orthogonality assumption is plausible.
+\end{enumerate}
+
+\subsection*{Problem 12. Dynamic panels}
+
+Consider the dynamic panel model
+\[
+y_{it}=\rho y_{i,t-1}+x_{it}'\beta+\alpha_i+u_{it}.
+\]
+
+\begin{enumerate}[label=(\alph*)]
+\item Explain why fixed effects do not automatically solve the endogeneity problem once $y_{i,t-1}$ is included.
+\item Show the source of the correlation after demeaning, defining any transformed lag carefully.
+\item In words, what is the Arellano-Bond idea for addressing the problem?
+\item Why is this problem different from the static fixed-effects model?
+\end{enumerate}
+
+\subsection*{Problem 13. Synthetic control mechanics}
+
+Unit 1 is treated after period $T_0=3$. Units 2, 3, and 4 are untreated donors. The pre-treatment outcomes are:
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+ & $t=1$ & $t=2$ & $t=3$ \\
+\midrule
+Treated unit 1 & 10 & 12 & 14 \\
+Donor 2 & 8 & 10 & 12 \\
+Donor 3 & 12 & 14 & 16 \\
+Donor 4 & 9 & 11 & 13 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Post-treatment outcomes at $t=4$ are:
+\[
+Y_{14}=18,\qquad Y_{24}=14,\qquad Y_{34}=18,\qquad Y_{44}=15.
+\]
+
+\begin{enumerate}[label=(\alph*)]
+\item Verify that weights $(w_2,w_3,w_4)=(0.5,0.5,0)$ exactly match the treated unit's pre-treatment path.
+\item Compute the synthetic untreated outcome for unit 1 at $t=4$ using these weights.
+\item Compute the estimated treatment effect at $t=4$.
+\item Why are nonnegative weights that sum to one important for the interpretation of synthetic control?
+\end{enumerate}
+
+\subsection*{Problem 14. Synthetic control versus DiD}
+
+Suppose a major tobacco-control law is adopted in one state. You observe annual cigarette sales for the treated state and all other states for 20 years before the law and 10 years after.
+
+\begin{enumerate}[label=(\alph*)]
+\item Why might synthetic control be more attractive than a simple DiD with all other states as controls?
+\item What would make the synthetic-control design unconvincing even if the algorithm returns weights?
+\item What would a persuasive treated-versus-synthetic path look like before and after treatment?
+\item Explain how the target counterfactual in synthetic control is conceptually similar to the target counterfactual in DiD.
+\end{enumerate}
+
+\subsection*{Problem 15. Integrated design question}
+
+A government introduces a housing-subsidy program in 2026. The program is first adopted by cities with fast-rising rents. You have annual city-level data from 2016 to 2030 on rents, construction permits, income, population, and housing prices. Some cities adopt in 2026, others adopt later, and some never adopt.
+
+\begin{enumerate}[label=(\alph*)]
+\item What is wrong with comparing 2027 rents in treated and untreated cities?
+\item What is wrong with a before-after comparison for treated cities?
+\item What would a credible DiD design need to argue in this setting?
+\item Why might standard two-way fixed effects with staggered adoption be hard to interpret here?
+\item Propose a design strategy that uses the panel structure more carefully.
+\end{enumerate}
+
+\newpage
+\section*{Solutions}
+
+\subsection*{Solution 1. Panel data and the comparison being made}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item A cross-sectional comparison compares workers with different training levels, but those workers may also differ in permanent ability, motivation, occupation, firm quality, or career attachment. If permanent ability affects wages and is correlated with training, then
+\[
+\Cov(Train_{it},\alpha_i)\neq 0,
+\]
+so the training coefficient absorbs both the return to training and the wage return to ability.
+
+\item Panel data allow the researcher to compare a worker to herself over time. The fixed-effects question is: when the same worker receives more training than usual, does her wage also rise relative to her usual wage?
+
+\item Panel methods do not solve time-varying confounding. If workers receive training exactly when they are promoted, move firms, suffer a health shock, or enter a booming occupation, then $Train_{it}$ can still be correlated with $u_{it}$ even after removing $\alpha_i$.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 2. Within and between variation}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Unit means are
+\[
+\bar{x}_A=\frac{2+4+6}{3}=4,\qquad
+\bar{x}_B=\frac{8+8+8}{3}=8.
+\]
+The grand mean is
+\[
+\bar{x}=\frac{2+4+6+8+8+8}{6}=6.
+\]
+
+\item The within components are:
+\[
+\begin{array}{c|ccc}
+&t=1&t=2&t=3\\
+\hline
+A&-2&0&2\\
+B&0&0&0
+\end{array}
+\]
+
+\item Unit A identifies the fixed-effects slope from $x$ because $x_{At}$ changes over time. Unit B contributes no within variation in $x$, because $x_{Bt}=8$ in every period.
+
+\item Pooled OLS uses both the difference between A and B and the changes within A. Fixed effects uses only within-unit changes. In this example, the between comparison is especially misleading because B has a higher level of $x$ but lower levels of $y$ than A. FE asks a narrower question: within A, when $x$ rises, does $y$ rise?
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 3. Pooled OLS bias in the unobserved-effects model}
+
+\begin{solutionbox}
+Ignoring $\alpha_i$, pooled OLS treats the composite error as $v_{it}=\alpha_i+u_{it}$. With a scalar regressor,
+\[
+\plim \hat{\beta}^{POLS}
+=
+\beta+\frac{\Cov(x_{it},v_{it})}{\Var(x_{it})}
+=
+\beta+\frac{\Cov(x_{it},\alpha_i)}{\Var(x_{it})}
++\frac{\Cov(x_{it},u_{it})}{\Var(x_{it})}.
+\]
+Given $\E[u_{it}\mid x_{it},\alpha_i]=0$, the last covariance is zero, so
+\[
+\plim \hat{\beta}^{POLS}
+=
+\beta+\frac{\Cov(x_{it},\alpha_i)}{\Var(x_{it})}.
+\]
+
+Pooled OLS is consistent if $\Cov(x_{it},\alpha_i)=0$. More strongly, it is enough that $\E[\alpha_i\mid x_{i1},\ldots,x_{iT}]$ does not vary with the regressor path.
+
+In the school example, high-quality schools spend more, so $\Cov(x_{it},\alpha_i)>0$. If $\alpha_i$ raises achievement, pooled OLS is biased upward: it attributes part of persistent school quality to spending.
+\end{solutionbox}
+
+\subsection*{Solution 4. Fixed effects and time-invariant regressors}
+
+\begin{solutionbox}
+Define unit means
+\[
+\bar{y}_i=\frac{1}{T}\sum_t y_{it},\qquad
+\bar{x}_i=\frac{1}{T}\sum_t x_{it},\qquad
+\bar{u}_i=\frac{1}{T}\sum_t u_{it}.
+\]
+Because $z_i$ and $\alpha_i$ are constant over time,
+\[
+\bar{y}_i=\bar{x}_i'\beta+z_i'\gamma+\alpha_i+\bar{u}_i.
+\]
+Subtracting gives
+\[
+y_{it}-\bar{y}_i=(x_{it}-\bar{x}_i)'\beta+(z_i-z_i)'\gamma+(\alpha_i-\alpha_i)+(u_{it}-\bar{u}_i),
+\]
+or
+\[
+\ddot{y}_{it}=\ddot{x}_{it}'\beta+\ddot{u}_{it}.
+\]
+
+The time-invariant regressor disappears because $z_i-\bar{z}_i=z_i-z_i=0$. This is not a software accident. It reflects the fact that FE estimates slopes from within-unit movement, and $z_i$ has none.
+
+The tradeoff is central. FE addresses bias from arbitrary correlation between $x_{it}$ and permanent unit heterogeneity $\alpha_i$. But it cannot estimate the coefficient on regressors that never change within a unit, because those regressors are perfectly absorbed by unit effects.
+\end{solutionbox}
+
+\subsection*{Solution 5. Fixed effects and first differences}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item First differencing gives
+\[
+\Delta y_{it}=\beta \Delta x_{it}+\Delta u_{it},
+\]
+where $\Delta y_{it}=y_{it}-y_{i,t-1}$ and $\Delta x_{it}=x_{it}-x_{i,t-1}$. The permanent effect $\alpha_i$ is removed.
+
+\item When $T=2$, the within-transformed regressor values are
+\[
+x_{i1}-\bar{x}_i=\frac{x_{i1}-x_{i2}}{2}=-\frac{\Delta x_i}{2},\qquad
+x_{i2}-\bar{x}_i=\frac{x_{i2}-x_{i1}}{2}=\frac{\Delta x_i}{2}.
+\]
+The same holds for $y$. Thus the within regression is built from exactly the same one change, $\Delta x_i$ and $\Delta y_i$, as the first-difference regression. The slope is identical.
+
+\item FD may be attractive when the economic question is naturally about changes from last period, such as growth, adjustment, or policy changes from one year to the next.
+
+\item FD may be unattractive when variables are measured with transitory error. If $x_{it}^{obs}=x_{it}^*+\nu_{it}$, then
+\[
+\Delta x_{it}^{obs}=\Delta x_{it}^*+\nu_{it}-\nu_{i,t-1}.
+\]
+Differencing can worsen the signal-to-noise ratio.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 6. Two-way fixed effects and what remains}
+
+\begin{solutionbox}
+The regressor can be written as
+\[
+x_{it}=a_i+b_t,
+\]
+with $a_A=0$, $a_B=1$, $a_C=2$, and $b_1=1$, $b_2=3$, $b_3=5$.
+
+The unit means are
+\[
+\bar{x}_A=3,\qquad \bar{x}_B=4,\qquad \bar{x}_C=5.
+\]
+The time means are
+\[
+\bar{x}_1=2,\qquad \bar{x}_2=4,\qquad \bar{x}_3=6.
+\]
+The grand mean is $\bar{x}=4$. For example,
+\[
+\tilde{x}_{A1}=1-3-2+4=0.
+\]
+Doing this for every cell gives
+\[
+\begin{array}{c|ccc}
+&t=1&t=2&t=3\\
+\hline
+A&0&0&0\\
+B&0&0&0\\
+C&0&0&0
+\end{array}
+\]
+
+Therefore $\beta$ cannot be identified under two-way fixed effects. The regressor is only a unit component plus a time component, and both components are absorbed.
+\end{solutionbox}
+
+\subsection*{Solution 7. Choosing the right panel estimator}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Fixed effects is the natural starting point. Permanent ability is likely correlated with training, so pooled OLS mixes the training effect with worker heterogeneity. FE removes stable worker differences and uses changes in training within worker.
+
+\item Two-way fixed effects is the natural starting point. Firm fixed effects remove permanent productivity, management, and industry-position differences. Year effects remove the national boom that affects many firms simultaneously.
+
+\item Fixed effects or two-way fixed effects is natural, depending on whether there are common time shocks. The city permanent differences are important, so pooled OLS is weak. If pollution or economic conditions also move nationally over time, time effects should be included.
+
+\item First differences is a natural starting point because the substantive object is year-to-year change. It directly asks whether changes in income growth are associated with changes in consumption growth. FE is still a useful comparison, but FD matches the question more closely.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 8. Difference-in-differences arithmetic}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Treated before-after change:
+\[
+78-70=8.
+\]
+
+\item Post-period treated-control difference:
+\[
+78-64=14.
+\]
+
+\item DiD estimate:
+\[
+(78-70)-(64-60)=8-4=4.
+\]
+
+\item The treated before-after comparison is not generally causal because other aggregate changes between pre and post may affect employment. The post-period treated-control difference is not generally causal because treated and control regions may differ permanently. DiD tries to remove both baseline level differences and common time changes, leaving the treated group's excess change.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 9. Difference-in-differences and potential outcomes}
+
+\begin{solutionbox}
+The observed DiD contrast in expectation is
+\begin{align*}
+\Delta^{DiD}
+&=
+\E[Y_{i,post}\mid D_i=1]-\E[Y_{i,pre}\mid D_i=1]\\
+&\quad-\left(\E[Y_{i,post}\mid D_i=0]-\E[Y_{i,pre}\mid D_i=0]\right).
+\end{align*}
+Because treatment occurs only in the post period,
+\[
+Y_{i,pre}=Y_{i,pre}(0)
+\]
+for both groups. For treated units after treatment,
+\[
+Y_{i,post}=Y_{i,post}(1).
+\]
+For control units after treatment,
+\[
+Y_{i,post}=Y_{i,post}(0).
+\]
+Therefore
+\begin{align*}
+\Delta^{DiD}
+&=
+\E[Y_{i,post}(1)-Y_{i,pre}(0)\mid D_i=1]\\
+&\quad-\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0].
+\end{align*}
+Add and subtract $\E[Y_{i,post}(0)\mid D_i=1]$:
+\begin{align*}
+\Delta^{DiD}
+&=
+\E[Y_{i,post}(1)-Y_{i,post}(0)\mid D_i=1]\\
+&\quad+
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1]\\
+&\quad-
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0]\\
+&=
+\ATT+\text{bias}.
+\end{align*}
+The bias term is
+\[
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1]
+-
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0].
+\]
+Parallel trends sets this term equal to zero:
+\[
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=1]
+=
+\E[Y_{i,post}(0)-Y_{i,pre}(0)\mid D_i=0].
+\]
+
+The assumption is about untreated potential outcomes because it asks how the treated group would have evolved without treatment. It is not a claim that observed outcomes should move in parallel after treatment. If treatment has an effect, observed treated and control outcomes should diverge after treatment.
+\end{solutionbox}
+
+\subsection*{Solution 10. Diagnosing a DiD design}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item The main concern is endogenous treatment assignment based on high unemployment. High-unemployment regions may have been on different employment trends before 2026. If they were already recovering faster or deteriorating faster than low-unemployment regions, the control trend is not a credible counterfactual.
+
+\item Useful evidence includes: long pre-treatment employment trends for both groups; information on the policy rule showing that assignment was based on a fixed threshold rather than anticipated future employment; comparison of industry composition and demographic trends; and evidence that no other region-specific policy changed at the same time.
+
+\item Anticipation contaminates the pre period. If firms changed hiring in late 2025 before official implementation, then 2025 is already partially treated. The measured pre-to-post change no longer compares untreated to treated periods cleanly.
+
+\item A better design might compare regions close to the eligibility threshold, use a narrower set of control regions with similar pre-treatment unemployment paths, exclude anticipation periods, or build an event-study style graph to show whether treated and control regions were moving similarly before adoption.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 11. Random effects, fixed effects, and Mundlak}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item The key random-effects assumption is that the permanent unit effect is orthogonal to the entire regressor path:
+\[
+\E[\alpha_i\mid x_{i1},\ldots,x_{iT}]=\E[\alpha_i].
+\]
+In words, the long-run level and timing of $x$ must not be systematically related to permanent unobserved unit traits.
+
+\item Random effects retains between-unit variation, so it can use variation in variables that differ across units but not over time. Fixed effects removes all time-invariant unit-level variation, so time-invariant regressors disappear.
+
+\item A correlated random-effects model writes
+\[
+\alpha_i=\psi+\theta \bar{x}_i+a_i,\qquad \E[a_i\mid x_{i1},\ldots,x_{iT}]=0.
+\]
+Substituting,
+\[
+y_{it}=x_{it}\beta+\theta \bar{x}_i+\psi+a_i+u_{it}.
+\]
+
+\item If $\theta\neq 0$, the unit mean of $x$ predicts the permanent component of the outcome, suggesting that the random-effects orthogonality assumption is not credible. The Mundlak term allows the model to account for correlation between $\alpha_i$ and the long-run level of $x$.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 12. Dynamic panels}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Fixed effects remove $\alpha_i$, but the transformed lagged outcome remains correlated with the transformed error. The problem is created by including $y_{i,t-1}$, which itself contains past shocks.
+
+\item Demeaning gives, for the regression sample,
+\[
+\ddot{y}_{it}=\rho \ddot{y}_{i,t-1}+\ddot{x}_{it}'\beta+\ddot{u}_{it},
+\]
+where $\ddot{y}_{i,t-1}=y_{i,t-1}-\bar{y}_{i,-1}$ and $\bar{y}_{i,-1}$ is the average of the lagged dependent variable over the observations used in the transformed regression. The term $y_{i,t-1}$ contains $u_{i,t-1}$. The transformed error $\ddot{u}_{it}=u_{it}-\bar{u}_i$ also contains $u_{i,t-1}$ through $\bar{u}_i$. Hence the transformed lagged dependent variable is mechanically correlated with the transformed error.
+
+\item The Arellano-Bond idea is to first-difference the model to remove $\alpha_i$ and then use sufficiently lagged levels of $y$ as instruments for the differenced lagged dependent variable, under assumptions about serial correlation in $u_{it}$.
+
+\item In the static model, strict exogeneity can make the within-transformed regressors orthogonal to the within-transformed errors. In the dynamic model, the lagged dependent variable is a function of past outcomes and past shocks, so the transformation itself creates a new correlation. Dynamics turn timing into the core identification issue.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 13. Synthetic control mechanics}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item With weights $(0.5,0.5,0)$, the synthetic pre-treatment path is
+\[
+0.5(8,10,12)+0.5(12,14,16)+0(9,11,13)=(10,12,14),
+\]
+which exactly matches the treated unit.
+
+\item At $t=4$,
+\[
+\widehat{Y}_{14}(0)=0.5Y_{24}+0.5Y_{34}+0Y_{44}
+=0.5(14)+0.5(18)=16.
+\]
+
+\item The estimated treatment effect is
+\[
+\hat{\tau}_{14}=Y_{14}-\widehat{Y}_{14}(0)=18-16=2.
+\]
+
+\item Nonnegative weights that sum to one make the synthetic unit a convex combination of actual untreated donors. This keeps the comparison transparent and avoids extrapolating outside the donor pool with negative or extreme weights.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 14. Synthetic control versus DiD}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Synthetic control may be more attractive because treatment occurs in one state and there is a long pre-treatment history. A simple DiD uses the average change of all other states, even if that average never looked like the treated state before the law. Synthetic control builds a weighted donor combination that tries to reproduce the treated state's pre-law path.
+
+\item The design is unconvincing if the pre-treatment fit is poor, if the treated state lies far outside the support of the donor states, if donor states are affected by spillovers or similar laws, or if the result depends almost entirely on one questionable donor.
+
+\item A persuasive graph would show the treated state and synthetic state tracking closely before the law, followed by a sustained post-treatment gap after the law. Poor pre-treatment tracking weakens the counterfactual claim.
+
+\item Both DiD and synthetic control try to recover the same kind of missing object: the treated unit's untreated post-treatment outcome. DiD uses the untreated group's average change as the counterfactual trend. Synthetic control uses a weighted donor path as the counterfactual path.
+\end{enumerate}
+\end{solutionbox}
+
+\subsection*{Solution 15. Integrated design question}
+
+\begin{solutionbox}
+\begin{enumerate}[label=(\alph*)]
+\item Comparing 2027 rents in treated and untreated cities confounds treatment with pre-existing city differences. Treated cities had fast-rising rents before adoption, so their post-treatment level likely differs for reasons unrelated to the subsidy.
+
+\item A before-after comparison for treated cities confounds the subsidy with aggregate housing-market changes between 2025 and 2027, such as interest rates, income growth, construction costs, migration, or national housing demand.
+
+\item A credible DiD design must argue that, absent the subsidy, treated cities and comparison cities would have followed parallel rent trends. Because cities were selected for fast-rising rents, this is a demanding assumption. The design needs strong pre-treatment trend evidence and a convincing assignment story.
+
+\item Standard two-way fixed effects with staggered adoption can be hard to interpret because early-treated cities may be compared with later-treated cities that are not clean untreated controls for all periods. If treatment effects vary across cities or over time since adoption, the coefficient may combine awkward comparisons rather than a single transparent causal effect.
+
+\item A better strategy would first define clean comparison groups. One option is to compare cities near the adoption threshold and remove periods when later adopters are already anticipating treatment. Another is to estimate cohort-specific DiD effects using not-yet-treated or never-treated cities as controls, with explicit pre-treatment trend checks. If only a few cities adopt early and long pre-treatment histories are available, synthetic control for each treated city may be more transparent.
+\end{enumerate}
+\end{solutionbox}
+
+\end{document}
