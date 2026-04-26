@@ -1,0 +1,1450 @@
+% =============================================================
+% Lecture: Time Series Econometrics
+% Course: Quantitative Economics, Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{appendixnumberbeamer}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\usetheme{SimplePlus}
+\graphicspath{{figures/time-series/}}
+
+\title{Time Series Econometrics}
+\subtitle{Persistence, Trends, Forecasting, and Dynamic Systems}
+\author{Swapnil Singh}
+\institute{Lietuvos Bankas \and Kaunas University of Technology}
+\date{Vilnius University, 2026}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Corr}{Corr}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calI}{\mathcal{I}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\plim}{\operatorname*{plim}}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\scriptsize\color{gray} Based on \texttt{lectures/time-series-notes.tex} and \texttt{lectures/time-series-plan.md}.}
+\end{frame}
+
+\begin{frame}{Roadmap}
+\tableofcontents
+\end{frame}
+
+% ============================================================
+\section{Motivation and Language}
+% ============================================================
+
+\begin{frame}{Why time series econometrics is different}
+\label{slide:why_ts}
+\small
+\begin{block}{Cross-sectional rows are often exchangeable; dated observations are not}
+The order of quarterly inflation, monthly unemployment, daily exchange rates, or annual GDP is part of the economic information.
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Questions about dynamics}
+\begin{itemize}
+  \item Is today's inflation related to yesterday's inflation?
+  \item Do output shocks fade or permanently shift the level?
+  \item Do interest rates help forecast future inflation?
+\end{itemize}
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{New risks}
+\begin{itemize}
+  \item serial dependence
+  \item stochastic and deterministic trends
+  \item regime changes and breaks
+  \item spurious levels regressions
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{block}{Central question}
+When data are ordered in time, how do dependence, persistence, trends, and dynamic feedback change the way we model economic variables?
+\end{block}
+\end{frame}
+
+\begin{frame}{Three data structures, three comparison problems}
+\small
+\begin{tabularx}{\textwidth}{p{0.19\textwidth}YYY}
+\toprule
+Data & Typical observation & Main comparison & Dependence issue \\
+\midrule
+Cross-section & household, worker, firm, country at one date & across units & omitted heterogeneity, clustering \\
+Time series & one aggregate or market over many dates & across dates & persistence, trends, breaks \\
+Panel & many units over many dates & across and within units & unit heterogeneity plus serial dependence \\
+\bottomrule
+\end{tabularx}
+
+\pause
+\begin{alertblock}{Time-series perspective}
+Dependence over time is not merely a nuisance. Inflation persistence, exchange-rate predictability, policy transmission, and business-cycle propagation are all questions about how information moves through time.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Forecasting, description, and causality}
+\small
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{block}{Forecasting}
+Use information at date $T$ to predict
+\[
+Y_{T+h}.
+\]
+\end{block}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{block}{Dynamic description}
+Summarize persistence, adjustment, and lead-lag patterns.
+\end{block}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{block}{Causal analysis}
+Estimate how an economically meaningful shock changes future outcomes.
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Do not confuse the three}
+A variable may help forecast another variable without representing an exogenous causal shock. A VAR can summarize dynamic correlations without identifying monetary-policy transmission.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Stochastic process versus realization}
+\label{slide:process_realization}
+\small
+\begin{block}{Definition}
+A \textbf{stochastic process} is a sequence of random variables
+\[
+\{Y_t:t\in\mathcal{T}\}
+\]
+defined on a common probability space. The observed time series
+\[
+\{Y_t:t=1,\ldots,T\}
+\]
+is one realized path from that process.
+\end{block}
+
+\pause
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{What we observe}
+One path for U.S. inflation, euro-area unemployment, an exchange rate, or an interest rate.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{What the model asks}
+What probabilistic mechanism could have produced this path, and what does the path teach us about persistence or prediction?
+\end{exampleblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Information sets and innovations}
+\small
+\begin{block}{Time-series conditioning}
+Let
+\[
+\calF_t=\sigma(Y_t,Y_{t-1},Y_{t-2},\ldots)
+\]
+denote the information generated by the history of $Y$. A forecast made at time $T$ is naturally written as
+\[
+\widehat{Y}_{T+h|T}=\E(Y_{T+h}\mid \calF_T).
+\]
+\end{block}
+
+\pause
+\begin{exampleblock}{Predictable component plus innovation}
+\[
+Y_t=\E(Y_t\mid\calF_{t-1})+\eps_t,
+\qquad
+\E(\eps_t\mid\calF_{t-1})=0.
+\]
+The innovation is the part of $Y_t$ not predictable from the past under the maintained model.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Lag notation records economic timing}
+\label{slide:lag_notation}
+\small
+\begin{block}{Lag operator}
+\[
+LY_t=Y_{t-1},
+\qquad
+L^hY_t=Y_{t-h}.
+\]
+The first difference is
+\[
+\Delta Y_t=Y_t-Y_{t-1}=(1-L)Y_t.
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Growth rates}
+If $Y_t>0$,
+\[
+\Delta\log Y_t=\log Y_t-\log Y_{t-1}
+\]
+is approximately the growth rate.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Timing is substantive}
+Whether a regressor is contemporaneous, lagged, or forward-looking changes the interpretation and the exogeneity assumptions.
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Stationarity and Dependence}
+% ============================================================
+
+\begin{frame}{Dependence over time: autocovariance and ACF}
+\label{slide:acf_def}
+\small
+\begin{block}{Autocovariance}
+For a process with finite second moments,
+\[
+\gamma_t(h)=\Cov(Y_t,Y_{t-h}).
+\]
+If this covariance depends only on the lag $h$, not on calendar time $t$, write it as $\gamma_h$.
+\end{block}
+
+\pause
+\begin{block}{Autocorrelation function}
+\[
+\rho_h=\frac{\gamma_h}{\gamma_0},
+\qquad
+\gamma_0=\Var(Y_t).
+\]
+The ACF is unit-free, $\rho_0=1$, and $-1\leq \rho_h\leq 1$.
+\end{block}
+
+\pause
+\begin{alertblock}{Interpretation}
+Autocorrelation is a summary of linear persistence. It is the first diagnostic language for time-series dynamics.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Strict and weak stationarity}
+\label{slide:stationarity_defs}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{Strict stationarity}
+For every set of dates $t_1,\ldots,t_m$ and every shift $h$, the joint distribution of
+\[
+(Y_{t_1},\ldots,Y_{t_m})
+\]
+is the same as that of
+\[
+(Y_{t_1+h},\ldots,Y_{t_m+h}).
+\]
+\end{block}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{block}{Weak stationarity}
+\[
+\E(Y_t)=\mu,
+\]
+\[
+\Var(Y_t)=\gamma_0<\infty,
+\]
+\[
+\Cov(Y_t,Y_{t-h})=\gamma_h.
+\]
+Only the first two moments and autocovariances must be stable.
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Main applied meaning}
+Stationarity is a stability restriction. It does not say the realized series is flat; it says the probabilistic environment is stable over time.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{White noise and shocks}
+\label{slide:white_noise}
+\small
+\begin{block}{White noise}
+A process $\eps_t$ is white noise if
+\[
+\E(\eps_t)=0,
+\qquad
+\Var(\eps_t)=\sigma^2,
+\qquad
+\Cov(\eps_t,\eps_s)=0\quad(t\neq s).
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Why it matters}
+White-noise shocks are the unpredictable input into ARMA, regression, and VAR models.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{What it does not imply}
+Zero autocorrelation is not the same as full independence. A series can have uncorrelated returns but persistent volatility.
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Three schematic paths}
+\label{slide:path_map}
+\small
+\begin{center}
+\includegraphics[width=0.93\textwidth,height=0.64\textheight,keepaspectratio]{paths_schematic.pdf}
+\end{center}
+
+\vspace{-0.4em}
+\begin{block}{Visual distinction}
+White noise has no linear memory. A stationary persistent process moves around a stable distribution. A random walk carries accumulated shocks in its level.
+\end{block}
+\end{frame}
+
+\begin{frame}{ACF patterns are a compact diagnostic}
+\label{slide:acf_patterns}
+\small
+\begin{center}
+\includegraphics[width=0.95\textwidth,height=0.70\textheight,keepaspectratio]{acf_patterns.pdf}
+\end{center}
+
+\vspace{-0.4em}
+\begin{alertblock}{Reading the plot}
+Fast decay suggests weak persistence. Slow decay suggests high persistence or possible nonstationarity. Alternating signs suggest negative dynamic feedback.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{AR, MA, and ARMA Models}
+% ============================================================
+
+\begin{frame}{The AR(1) model}
+\label{slide:ar1_mean}
+\small
+\begin{block}{Model}
+\[
+Y_t=c+\phi Y_{t-1}+\eps_t,
+\qquad
+\eps_t\sim WN(0,\sigma^2).
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Mean under stationarity}
+If $\E(Y_t)=\E(Y_{t-1})=\mu$,
+\[
+\mu=c+\phi\mu,
+\qquad
+\mu=\frac{c}{1-\phi}.
+\]
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Stability}
+For AR(1), a finite stationary distribution requires
+\[
+|\phi|<1.
+\]
+The parameter $\phi$ measures persistence.
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\hfill\hyperlink{app:ar1-moments}{\beamerbutton{AR(1) Algebra}}
+\end{frame}
+
+\begin{frame}{Centering reveals shock propagation}
+\label{slide:ar1_propagation}
+\small
+With $\mu=c/(1-\phi)$, define $y_t=Y_t-\mu$. Then
+\[
+y_t=\phi y_{t-1}+\eps_t.
+\]
+Repeated substitution gives, when $|\phi|<1$,
+\[
+y_t=\eps_t+\phi\eps_{t-1}+\phi^2\eps_{t-2}+\cdots.
+\]
+
+\pause
+\begin{block}{A one-unit innovation today}
+\[
+\text{effect on }y_t=1,\quad
+\text{effect on }y_{t+1}=\phi,\quad
+\text{effect on }y_{t+h}=\phi^h.
+\]
+\end{block}
+
+\begin{alertblock}{Persistence}
+If $\phi=0.2$, the shock disappears quickly. If $\phi=0.98$, the shock remains important many periods later.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{AR(1) variance and autocorrelation}
+\label{slide:ar1_acf}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{Variance}
+For the stationary centered process,
+\[
+\gamma_0=\Var(y_t)
+=\phi^2\gamma_0+\sigma^2,
+\]
+so
+\[
+\Var(Y_t)=\frac{\sigma^2}{1-\phi^2}.
+\]
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{ACF}
+For $h\geq 1$,
+\[
+\gamma_h=\phi\gamma_{h-1},
+\]
+so
+\[
+\rho_h=\phi^h.
+\]
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{center}
+\includegraphics[width=0.82\textwidth,height=0.35\textheight,keepaspectratio]{ar1_impulse.pdf}
+\end{center}
+
+\hfill\hyperlink{app:ar1-acf}{\beamerbutton{Variance and ACF}}
+\end{frame}
+
+\begin{frame}{Interpreting the AR(1) coefficient}
+\small
+\begin{tabularx}{\textwidth}{p{0.22\textwidth}Y}
+\toprule
+Value of $\phi$ & Interpretation \\
+\midrule
+$\phi=0$ & no persistence beyond the current shock \\
+$0<\phi<1$ & positive persistence; shocks decay monotonically \\
+$\phi$ close to $1$ & high persistence; shocks decay slowly \\
+$-1<\phi<0$ & alternating signs after a shock \\
+$\phi=1$ & unit root; shocks have permanent effects on the level \\
+$|\phi|>1$ & explosive behavior in the linear model \\
+\bottomrule
+\end{tabularx}
+
+\pause
+\begin{exampleblock}{Half-life}
+The half-life of a shock is the $h$ such that $|\phi|^h=1/2$:
+\[
+h=\frac{\log(1/2)}{\log|\phi|}.
+\]
+If $\phi=0.9$, the half-life is about $6.6$ periods; if $\phi=0.98$, it is about $34.3$ periods.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Inflation persistence}
+\small
+\begin{block}{A starting model}
+\[
+\pi_t=c+\phi_1\pi_{t-1}+\cdots+\phi_p\pi_{t-p}+\eps_t.
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Economic question}
+Do inflation shocks die out quickly, or does inflation remain elevated after a disturbance?
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Why it matters}
+Persistence shapes central-bank credibility, sacrifice ratios, and the expected cost of disinflation.
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Empirical caution}
+Inflation regimes change. A sample spanning high inflation, inflation targeting, supply shocks, and policy-framework changes may not be described by one stable AR model.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{AR($p$) models and lag polynomials}
+\label{slide:arp_roots}
+\small
+\begin{block}{Autoregression of order $p$}
+\[
+Y_t=c+\phi_1Y_{t-1}+\cdots+\phi_pY_{t-p}+\eps_t.
+\]
+In lag notation,
+\[
+\Phi(L)Y_t=c+\eps_t,
+\qquad
+\Phi(L)=1-\phi_1L-\cdots-\phi_pL^p.
+\]
+\end{block}
+
+\pause
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Why more than one lag?}
+Multiple lags capture momentum, delayed adjustment, reversal, and policy smoothing.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Stationarity intuition}
+The roots of
+\[
+\Phi(z)=0
+\]
+must lie outside the unit circle. No lag dynamic should create a unit root or explosive root.
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\hfill\hyperlink{app:arp-roots}{\beamerbutton{Root Condition}}
+\end{frame}
+
+\begin{frame}{MA($q$): finite shock memory}
+\small
+\begin{block}{Moving-average model}
+\[
+Y_t=\mu+\eps_t+\theta_1\eps_{t-1}+\cdots+\theta_q\eps_{t-q},
+\qquad
+\eps_t\sim WN(0,\sigma^2).
+\]
+Equivalently,
+\[
+Y_t-\mu=\Theta(L)\eps_t,
+\qquad
+\Theta(L)=1+\theta_1L+\cdots+\theta_qL^q.
+\]
+\end{block}
+
+\pause
+\begin{exampleblock}{MA(1)}
+If $Y_t=\mu+\eps_t+\theta\eps_{t-1}$, then
+\[
+\Var(Y_t)=\sigma^2(1+\theta^2),
+\qquad
+\rho_1=\frac{\theta}{1+\theta^2},
+\qquad
+\rho_h=0\quad(h\geq 2).
+\]
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{ARMA models combine persistence and shock structure}
+\small
+\begin{block}{ARMA($p,q$)}
+\[
+\Phi(L)(Y_t-\mu)=\Theta(L)\eps_t,
+\]
+where
+\[
+\Phi(L)=1-\phi_1L-\cdots-\phi_pL^p,
+\qquad
+\Theta(L)=1+\theta_1L+\cdots+\theta_qL^q.
+\]
+\end{block}
+
+\begin{tabularx}{\textwidth}{p{0.18\textwidth}p{0.34\textwidth}Y}
+\toprule
+Model & Equation & Main idea \\
+\midrule
+AR($p$) & $\Phi(L)(Y_t-\mu)=\eps_t$ & persistence through lagged values \\
+MA($q$) & $Y_t-\mu=\Theta(L)\eps_t$ & finite propagation of shocks \\
+ARMA($p,q$) & $\Phi(L)(Y_t-\mu)=\Theta(L)\eps_t$ & persistence plus serially structured innovations \\
+\bottomrule
+\end{tabularx}
+
+\pause
+\begin{alertblock}{Use}
+ARMA models are natural for stationary series when the goal is compact description or forecasting.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{Trends and Unit Roots}
+% ============================================================
+
+\begin{frame}{Deterministic trends}
+\label{slide:det_trend}
+\small
+\begin{block}{Trend-stationary process}
+\[
+Y_t=\alpha+\delta t+u_t,
+\]
+where $u_t$ is stationary.
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Interpretation}
+The mean changes deterministically with $t$, but deviations from the trend are stationary.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Shock behavior}
+A shock moves the series away from trend temporarily if $u_t$ is stationary. The long-run path is still anchored by $\alpha+\delta t$.
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{block}{Transformation}
+The natural operation is detrending: estimate or model the deterministic trend and study the stationary residual component.
+\end{block}
+\end{frame}
+
+\begin{frame}{Random walks and unit roots}
+\label{slide:random_walk}
+\small
+\begin{block}{Random walk}
+\[
+Y_t=Y_{t-1}+\eps_t.
+\]
+Iterating backward,
+\[
+Y_t=Y_0+\sum_{s=1}^{t}\eps_s.
+\]
+\end{block}
+
+\pause
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{No fixed variance}
+If $\Var(\eps_t)=\sigma^2$, then
+\[
+\Var(Y_t\mid Y_0)=t\sigma^2.
+\]
+The level is not weakly stationary.
+\end{alertblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Permanent shocks}
+A shock at date $t$ enters every future level through the accumulated sum.
+\end{exampleblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Trend-stationary versus difference-stationary}
+\label{slide:ts_ds}
+\small
+\begin{center}
+\includegraphics[width=0.90\textwidth,height=0.40\textheight,keepaspectratio]{trend_vs_rw.pdf}
+\end{center}
+
+\begin{tabularx}{\textwidth}{p{0.24\textwidth}YY}
+\toprule
+Feature & Trend-stationary & Difference-stationary \\
+\midrule
+Canonical model & $Y_t=\alpha+\delta t+u_t$ & $Y_t=Y_{t-1}+c+\eps_t$ \\
+Stationary object & deviation from trend & first difference $\Delta Y_t$ \\
+Shock effect & temporary & permanent \\
+Transformation & detrend & difference \\
+\bottomrule
+\end{tabularx}
+\end{frame}
+
+\begin{frame}{Integrated processes and transformations}
+\small
+\begin{block}{Difference stationarity}
+If $Y_t$ follows a random walk with drift,
+\[
+Y_t=c+Y_{t-1}+\eps_t,
+\]
+then
+\[
+\Delta Y_t=c+\eps_t.
+\]
+The differenced series may be stationary even though the level is not.
+\end{block}
+
+\pause
+\begin{block}{$I(1)$ and $I(0)$}
+$Y_t$ is integrated of order one, written $Y_t\sim I(1)$, if $Y_t$ is nonstationary but $\Delta Y_t$ is stationary. A stationary process is $I(0)$.
+\end{block}
+
+\pause
+\begin{alertblock}{Do not difference mechanically}
+Differencing changes the question. If $Y_t$ is log GDP, then $\Delta\log Y_t$ is growth. A model for GDP growth is not a model for the level of GDP.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Dickey--Fuller intuition}
+\label{slide:adf}
+\small
+Start with the AR(1)
+\[
+Y_t=\rho Y_{t-1}+\eps_t.
+\]
+Subtract $Y_{t-1}$:
+\[
+\Delta Y_t=(\rho-1)Y_{t-1}+\eps_t=\pi Y_{t-1}+\eps_t.
+\]
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{Null}
+\[
+H_0:\rho=1
+\quad\Longleftrightarrow\quad
+H_0:\pi=0.
+\]
+There is a unit root.
+\end{block}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{block}{Stationary alternative}
+\[
+H_1:|\rho|<1,
+\]
+often written as
+\[
+H_1:\pi<0.
+\]
+\end{block}
+\end{column}
+\end{columns}
+
+\hfill\hyperlink{app:adf-details}{\beamerbutton{ADF Details}}
+\end{frame}
+
+\begin{frame}{ADF regressions: deterministic terms and short-run dynamics}
+\small
+\begin{block}{Augmented Dickey--Fuller regression}
+\[
+\Delta Y_t=\alpha+\delta t+\pi Y_{t-1}
++\sum_{j=1}^{k}a_j\Delta Y_{t-j}+e_t.
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Why add lagged differences?}
+They absorb short-run serial correlation so that $e_t$ is closer to white noise.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Why special critical values?}
+Under the unit-root null, $Y_{t-1}$ is nonstationary, so the usual $t$ distribution does not apply.
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Applied judgment}
+Failing to reject a unit root does not prove a unit root. Tests can have low power against highly persistent stationary alternatives.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Spurious regression}
+\label{slide:spurious}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{Two unrelated random walks}
+\[
+Y_t=Y_{t-1}+\eps_t,
+\qquad
+X_t=X_{t-1}+\nu_t,
+\]
+with independent shocks.
+\end{block}
+
+\begin{alertblock}{The trap}
+The levels regression
+\[
+Y_t=\alpha+\beta X_t+u_t
+\]
+can show a high $R^2$ and a significant $\hat{\beta}$ even though the series are unrelated.
+\end{alertblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\includegraphics[width=\textwidth,height=0.66\textheight,keepaspectratio]{spurious.pdf}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cointegration preview}
+\small
+\begin{block}{The important exception}
+If $Y_t$ and $X_t$ are each $I(1)$ but a linear combination is stationary,
+\[
+Y_t-\beta X_t\sim I(0),
+\]
+then the variables are cointegrated.
+\end{block}
+
+\pause
+\begin{exampleblock}{Economic meaning}
+The levels share a stable long-run relation even though each level is individually nonstationary. Examples might include two interest rates or related prices whose spread is mean-reverting.
+\end{exampleblock}
+
+\pause
+\begin{block}{Error-correction intuition}
+\[
+\Delta Y_t=\alpha+\lambda(Y_{t-1}-\beta X_{t-1})+\Gamma(L)\Delta X_t+e_t.
+\]
+If $\lambda<0$, a positive deviation from the long-run relation predicts downward adjustment.
+\end{block}
+\end{frame}
+
+% ============================================================
+\section{Forecasting}
+% ============================================================
+
+\begin{frame}{Forecasts as conditional expectations}
+\small
+\begin{block}{Forecast and forecast error}
+\[
+\widehat{Y}_{T+h|T}=\E(Y_{T+h}\mid\calF_T),
+\qquad
+e_{T+h}=Y_{T+h}-\widehat{Y}_{T+h|T}.
+\]
+\end{block}
+
+\pause
+\begin{exampleblock}{Under squared-error loss}
+The conditional expectation is the optimal forecast. The forecast is always conditional on an information set and a maintained model.
+\end{exampleblock}
+
+\pause
+\begin{alertblock}{Interpretation}
+Forecasting is not guessing a fixed future. It is summarizing the distribution of future outcomes given what is known at the forecast origin.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{AR(1) forecasts}
+\label{slide:ar1_forecast}
+\small
+For
+\[
+Y_t=c+\phi Y_{t-1}+\eps_t,
+\qquad
+|\phi|<1,
+\]
+the one-step forecast is
+\[
+\widehat{Y}_{T+1|T}=c+\phi Y_T.
+\]
+Using $\mu=c/(1-\phi)$,
+\[
+\widehat{Y}_{T+h|T}=\mu+\phi^h(Y_T-\mu).
+\]
+
+\pause
+\begin{center}
+\includegraphics[width=0.86\textwidth,height=0.38\textheight,keepaspectratio]{forecast_paths.pdf}
+\end{center}
+
+\vspace{-0.4em}
+\begin{alertblock}{Persistence controls forecast reversion}
+When $|\phi|<1$, forecasts converge to $\mu$ as the horizon grows. Higher $\phi$ means slower convergence.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Forecast uncertainty}
+\small
+\begin{block}{$h$-step AR(1) forecast error}
+\[
+Y_{T+h}-\widehat{Y}_{T+h|T}
+=\eps_{T+h}+\phi\eps_{T+h-1}+\cdots+\phi^{h-1}\eps_{T+1}.
+\]
+\end{block}
+
+\pause
+\begin{block}{Forecast error variance}
+\[
+\Var(e_{T+h})
+=\sigma^2\sum_{j=0}^{h-1}\phi^{2j}
+=\sigma^2\frac{1-\phi^{2h}}{1-\phi^2}.
+\]
+\end{block}
+
+\pause
+\begin{exampleblock}{Lesson}
+Forecast uncertainty rises with the horizon and approaches the unconditional variance when $|\phi|<1$.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Forecasting practice}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{Modeling choices}
+\begin{itemize}
+  \item levels, logs, growth rates, or differences
+  \item lag length
+  \item deterministic terms and seasonality
+  \item parameter stability
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{block}{Evaluation choices}
+\begin{itemize}
+  \item out-of-sample performance
+  \item benchmark model
+  \item point forecast versus uncertainty
+  \item purpose: prediction, stress testing, or policy
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{alertblock}{Discipline}
+A forecast is conditional on a model and an information set. Good applied work states both.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{Time-Series Regression and Distributed Lags}
+% ============================================================
+
+\begin{frame}{Regression with time-series data}
+\label{slide:ts_reg}
+\small
+\begin{block}{Static regression}
+\[
+Y_t=\beta_0+\beta_1X_t+u_t.
+\]
+This often says too much: the effect of $X_t$ is contemporaneous and complete within the same period.
+\end{block}
+
+\pause
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Why dynamics matter}
+Policy rates affect borrowing costs, spending, unemployment, and inflation over several quarters.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Exogeneity is about timing}
+If today's shock affects tomorrow's regressor, strict exogeneity fails even if the regressor is predetermined in some weaker sense.
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Serial correlation in regression errors}
+\small
+\begin{block}{Example}
+\[
+u_t=\rho u_{t-1}+e_t.
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Why it matters}
+\begin{enumerate}
+  \item It can signal omitted dynamics.
+  \item It affects standard errors and inference.
+  \item With lagged dependent variables, it can threaten consistency.
+\end{enumerate}
+\end{alertblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Applied response}
+Use dynamic specifications, residual diagnostics, HAC standard errors when appropriate, or explicit error models.
+\end{exampleblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Distributed lag models}
+\label{slide:dl}
+\small
+\begin{block}{Finite distributed lag}
+\[
+Y_t=\alpha+\beta_0X_t+\beta_1X_{t-1}+\cdots+\beta_qX_{t-q}+u_t.
+\]
+\end{block}
+
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Dynamic effects}
+\begin{itemize}
+  \item $\beta_0$: impact effect
+  \item $\beta_j$: effect associated with the $j$th lag
+  \item $\sum_{j=0}^{q}\beta_j$: long-run multiplier for a permanent change in $X$
+\end{itemize}
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{alertblock}{Example}
+With $L_t$ the lending rate and $i_t$ the policy rate,
+\[
+L_t=\alpha+\beta_0 i_t+\beta_1 i_{t-1}+\beta_2 i_{t-2}+u_t.
+\]
+Pass-through may be gradual.
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{ADL models and long-run multipliers}
+\label{slide:adl_lrm}
+\small
+\begin{block}{ADL(1,1)}
+\[
+Y_t=\alpha+\rho Y_{t-1}+\beta_0X_t+\beta_1X_{t-1}+u_t.
+\]
+The lagged dependent variable captures persistence in $Y$.
+\end{block}
+
+\pause
+\begin{block}{Long-run multiplier}
+For a permanent change in $X$, set $Y_t=Y_{t-1}=Y$ and $X_t=X_{t-1}=X$:
+\[
+Y=\alpha+\rho Y+(\beta_0+\beta_1)X.
+\]
+Thus
+\[
+\frac{\partial Y}{\partial X}
+=\frac{\beta_0+\beta_1}{1-\rho},
+\qquad |\rho|<1.
+\]
+\end{block}
+
+\hfill\hyperlink{app:adl-lrm}{\beamerbutton{LRM Derivation}}
+\end{frame}
+
+\begin{frame}{Dynamic regression workflow}
+\small
+\begin{enumerate}
+  \item Plot the series and decide on levels, logs, differences, or growth rates.
+  \item Check persistence, seasonality, and obvious breaks.
+  \item Start with an economically motivated lag structure.
+  \item Inspect residual autocorrelation.
+  \item Interpret impact, delayed, and long-run effects separately.
+  \item State whether the exercise is predictive, descriptive, or causal.
+\end{enumerate}
+
+\pause
+\begin{alertblock}{Common mistake}
+A lag coefficient is not automatically causal. It is a dynamic conditional association unless timing, omitted variables, policy rules, and shock structure justify a causal interpretation.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{VARs and Dynamic Systems}
+% ============================================================
+
+\begin{frame}{A two-variable VAR}
+\label{slide:var_setup}
+\small
+Let
+\[
+Z_t=
+\begin{pmatrix}
+y_t\\
+x_t
+\end{pmatrix}.
+\]
+A VAR(1) is
+\[
+Z_t=a+A_1Z_{t-1}+e_t,
+\]
+or
+\begin{align*}
+y_t&=a_y+a_{11}y_{t-1}+a_{12}x_{t-1}+e_{yt},\\
+x_t&=a_x+a_{21}y_{t-1}+a_{22}x_{t-1}+e_{xt}.
+\end{align*}
+
+\pause
+\begin{block}{Why economists use VARs}
+A VAR treats every variable as potentially endogenous within a dynamic system. Each equation uses lagged values of all variables to predict one current variable.
+\end{block}
+\end{frame}
+
+\begin{frame}{Granger causality}
+\label{slide:granger}
+\small
+\begin{block}{Definition}
+In a VAR, $x$ Granger-causes $y$ if lagged values of $x$ help predict $y$ after controlling for lagged values of $y$ and the other included variables.
+\end{block}
+
+\pause
+\begin{exampleblock}{VAR(1) restriction}
+In
+\[
+y_t=a_y+a_{11}y_{t-1}+a_{12}x_{t-1}+e_{yt},
+\]
+$x$ does not Granger-cause $y$ if
+\[
+a_{12}=0.
+\]
+In a VAR($p$), all lag coefficients on $x$ in the $y$ equation must be zero.
+\end{exampleblock}
+
+\pause
+\begin{alertblock}{Terminology warning}
+Granger causality is predictive content, not structural causality.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Impulse-response intuition}
+\label{slide:var_irf}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{VAR(1) propagation}
+\[
+Z_t-\mu=A_1(Z_{t-1}-\mu)+e_t.
+\]
+A one-time innovation $e_t$ changes:
+\[
+Z_t: e_t,
+\qquad
+Z_{t+1}: A_1e_t,
+\qquad
+Z_{t+h}: A_1^he_t.
+\]
+\end{block}
+
+\hfill\hyperlink{app:var-irf}{\beamerbutton{IRF Recursion}}
+\end{column}
+\begin{column}{0.49\textwidth}
+\includegraphics[width=\textwidth,height=0.62\textheight,keepaspectratio]{irf_schematic.pdf}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Reduced-form versus structural shocks}
+\small
+\begin{block}{Reduced-form innovations}
+The VAR residuals $e_t$ are innovations relative to the variables and lags in the VAR. Their components may be contemporaneously correlated.
+\end{block}
+
+\pause
+\begin{alertblock}{Structural interpretation requires identification}
+A policy-rate innovation in a reduced-form VAR is not automatically an exogenous monetary-policy shock. Structural VAR analysis adds assumptions such as recursive timing restrictions, sign restrictions, external instruments, or long-run restrictions.
+\end{alertblock}
+
+\pause
+\begin{exampleblock}{Practical use}
+VARs are useful first descriptions of multivariate dynamics and often useful forecasting tools. Policy interpretation of impulse responses requires an additional identification argument.
+\end{exampleblock}
+\end{frame}
+
+% ============================================================
+\section{Applications and Takeaways}
+% ============================================================
+
+\begin{frame}{Five organizing applications}
+\small
+\begin{tabularx}{\textwidth}{p{0.18\textwidth}p{0.20\textwidth}p{0.23\textwidth}Y}
+\toprule
+Application & Variables & Useful model & Main caution \\
+\midrule
+Inflation persistence & inflation & AR($p$), unit-root diagnostics & monetary-regime breaks \\
+Business cycles & GDP growth, unemployment & AR, ADL, VAR & trends and revisions \\
+Monetary policy & rates, inflation, output & VAR, impulse responses & structural identification \\
+Exchange rates & log exchange rate, returns & random-walk benchmark & weak predictability \\
+Asset or commodity prices & prices, returns & differenced models; volatility extensions & mean dynamics differ from volatility dynamics \\
+\bottomrule
+\end{tabularx}
+\end{frame}
+
+\begin{frame}{How the toolkit maps to economic questions}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{Persistence questions}
+\begin{itemize}
+  \item AR models
+  \item ACF diagnostics
+  \item half-lives and shock decay
+  \item regime stability checks
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{block}{Trend questions}
+\begin{itemize}
+  \item deterministic trends
+  \item random walks and unit roots
+  \item transformations
+  \item cointegration when levels move together
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+
+\pause
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Dynamic effects}
+Distributed lags and ADLs separate impact, delayed, and long-run effects.
+\end{exampleblock}
+\end{column}
+\begin{column}{0.49\textwidth}
+\begin{exampleblock}{Systems}
+VARs summarize multivariate feedback, forecasting content, and impulse-response paths.
+\end{exampleblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Final takeaways}
+\small
+\begin{enumerate}
+  \item Time ordering makes dependence central.
+  \item Stationarity is the baseline language for stable dynamic behavior.
+  \item ARMA models describe persistence and are natural forecasting tools.
+  \item Unit roots require different transformations and change the meaning of shocks.
+  \item Dynamic regressions must be interpreted with timing and exogeneity in mind.
+  \item VARs summarize multivariate dynamics, but structural causal interpretation requires additional assumptions.
+\end{enumerate}
+
+\pause
+\begin{alertblock}{Unifying perspective}
+Good time-series econometrics starts by asking what kind of persistence the data contain. Once we know whether shocks are temporary or permanent, whether variables are stationary or trending, and whether lags have predictive content, we can choose models that answer the economic question rather than merely fit the path.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\appendix
+\section*{Appendix}
+% ============================================================
+
+\begin{frame}{Appendix: AR(1) mean and infinite MA representation}
+\label{app:ar1-moments}
+\small
+For
+\[
+Y_t=c+\phi Y_{t-1}+\eps_t,
+\qquad
+\E(\eps_t)=0,
+\]
+stationarity implies $\E(Y_t)=\E(Y_{t-1})=\mu$. Therefore
+\[
+\mu=c+\phi\mu,
+\qquad
+\mu=\frac{c}{1-\phi}.
+\]
+
+Centering with $y_t=Y_t-\mu$ gives
+\[
+y_t=\phi y_{t-1}+\eps_t.
+\]
+Repeated substitution gives
+\[
+y_t=\sum_{j=0}^{m}\phi^j\eps_{t-j}+\phi^{m+1}y_{t-m-1}.
+\]
+If $|\phi|<1$ and the remote past does not dominate,
+\[
+y_t=\sum_{j=0}^{\infty}\phi^j\eps_{t-j}.
+\]
+
+\hfill\hyperlink{slide:ar1_mean}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: AR(1) variance and ACF}
+\label{app:ar1-acf}
+\small
+Using the infinite representation and serially uncorrelated innovations,
+\[
+\Var(y_t)=
+\Var\left(\sum_{j=0}^{\infty}\phi^j\eps_{t-j}\right)
+=\sum_{j=0}^{\infty}\phi^{2j}\sigma^2
+=\frac{\sigma^2}{1-\phi^2},
+\]
+where the geometric series converges only when $|\phi|<1$.
+
+\medskip
+For $h\geq 1$,
+\[
+\gamma_h=\Cov(y_t,y_{t-h}).
+\]
+From $y_t=\phi y_{t-1}+\eps_t$,
+\begin{align*}
+\gamma_h
+&=\Cov(\phi y_{t-1}+\eps_t,y_{t-h})\\
+&=\phi\Cov(y_{t-1},y_{t-h})+\Cov(\eps_t,y_{t-h})\\
+&=\phi\gamma_{h-1}.
+\end{align*}
+Thus
+\[
+\gamma_h=\phi^h\gamma_0,
+\qquad
+\rho_h=\phi^h.
+\]
+
+\hfill\hyperlink{slide:ar1_acf}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: AR($p$) roots and stationarity}
+\label{app:arp-roots}
+\footnotesize
+The AR($p$) model is
+\[
+\Phi(L)Y_t=c+\eps_t,
+\qquad
+\Phi(L)=1-\phi_1L-\cdots-\phi_pL^p.
+\]
+For the centered process $y_t=Y_t-\mu$,
+\[
+\Phi(L)y_t=\eps_t.
+\]
+
+\begin{block}{Power-series interpretation}
+Stationarity requires that $\Phi(L)$ be invertible as a stable power series:
+\[
+y_t=\Phi(L)^{-1}\eps_t
+=\psi(L)\eps_t
+=\sum_{j=0}^{\infty}\psi_j\eps_{t-j},
+\]
+with absolutely summable coefficients $\sum_{j=0}^{\infty}|\psi_j|<\infty$.
+\end{block}
+
+\begin{alertblock}{Root condition}
+All roots $z$ of
+\[
+\Phi(z)=1-\phi_1z-\cdots-\phi_pz^p=0
+\]
+must satisfy $|z|>1$. For AR(1), $z=1/\phi$, so $|z|>1$ is exactly $|\phi|<1$.
+\end{alertblock}
+
+\hfill\hyperlink{slide:arp_roots}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: ADF regression details}
+\label{app:adf-details}
+\small
+Suppose the true process has higher-order autoregressive dynamics:
+\[
+Y_t=c+\rho_1Y_{t-1}+\cdots+\rho_pY_{t-p}+\eps_t.
+\]
+This can be reparameterized as
+\[
+\Delta Y_t=\alpha+\pi Y_{t-1}
++\sum_{j=1}^{p-1}a_j\Delta Y_{t-j}+\eps_t,
+\]
+where
+\[
+\pi=\rho_1+\cdots+\rho_p-1.
+\]
+
+\begin{block}{Test}
+The unit-root null is $H_0:\pi=0$. The lagged differences account for short-run dynamics that would otherwise appear as residual serial correlation.
+\end{block}
+
+\begin{alertblock}{Deterministic terms}
+No constant, a constant, or a constant plus trend imply different null and alternative models. The choice should be guided by graphs and economics, not mechanically added after seeing the result.
+\end{alertblock}
+
+\hfill\hyperlink{slide:adf}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: ADL long-run multiplier}
+\label{app:adl-lrm}
+\small
+Start from the ADL(1,1):
+\[
+Y_t=\alpha+\rho Y_{t-1}+\beta_0X_t+\beta_1X_{t-1}+u_t.
+\]
+For a permanent change in $X$, set
+\[
+Y_t=Y_{t-1}=Y,
+\qquad
+X_t=X_{t-1}=X,
+\qquad
+\E(u_t)=0.
+\]
+Then
+\[
+Y=\alpha+\rho Y+(\beta_0+\beta_1)X.
+\]
+Move the autoregressive term to the left:
+\[
+(1-\rho)Y=\alpha+(\beta_0+\beta_1)X.
+\]
+If $|\rho|<1$,
+\[
+Y=\frac{\alpha}{1-\rho}
++\frac{\beta_0+\beta_1}{1-\rho}X.
+\]
+Therefore the long-run multiplier is
+\[
+\frac{\partial Y}{\partial X}
+=\frac{\beta_0+\beta_1}{1-\rho}.
+\]
+
+\hfill\hyperlink{slide:adl_lrm}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Appendix: VAR impulse-response recursion}
+\label{app:var-irf}
+\footnotesize
+The VAR($p$)
+\[
+Z_t=a+A_1Z_{t-1}+\cdots+A_pZ_{t-p}+e_t
+\]
+can be written as a VAR(1) in companion form. Define
+\[
+S_t=(Z_t',Z_{t-1}',\ldots,Z_{t-p+1}')'.
+\]
+Then
+\[
+S_t=b+FS_{t-1}+\eta_t.
+\]
+
+\begin{block}{Impulse propagation}
+Ignoring later shocks, a one-time innovation at date $t$ propagates as
+\[
+S_{t+h}-\E(S_{t+h})=F^h\eta_t.
+\]
+For a VAR(1), this reduces to
+\[
+Z_{t+h}-\E(Z_{t+h})=A_1^he_t.
+\]
+\end{block}
+
+\begin{alertblock}{Identification}
+Structural impulse responses also require a mapping from reduced-form innovations $e_t$ to economically interpretable shocks.
+\end{alertblock}
+
+\hfill\hyperlink{slide:var_irf}{\beamerbutton{Back}}
+\end{frame}
+
+\end{document}
