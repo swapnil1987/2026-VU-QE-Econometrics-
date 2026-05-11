@@ -1,0 +1,432 @@
+% =============================================================
+% Practice Problems: Time Series Econometrics
+% Course: Quantitative Economics, Vilnius University
+% Author: Swapnil Singh
+% =============================================================
+\documentclass[10pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{appendixnumberbeamer}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{enumerate}
+
+\usetheme{SimplePlus}
+\graphicspath{{figures/time-series/}}
+
+\title{Practice Problems: Time Series Econometrics}
+\subtitle{Persistence, Trends, Forecasting, and Dynamic Systems}
+\author{Swapnil Singh}
+\institute{Lietuvos Bankas \and Kaunas University of Technology}
+\date{Vilnius University, 2026}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Corr}{Corr}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\plim}{\operatorname*{plim}}
+\newcommand{\I}{\mathbb{I}}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\scriptsize\color{gray} 8 problems from easy to hard. Based on \texttt{lectures/lecture\_time\_series.tex}.}
+\end{frame}
+
+\begin{frame}{How to use this practice set}
+\small
+\begin{block}{Structure}
+The questions become progressively harder:
+\begin{itemize}
+  \item Problems 1--3: time-series language, stationarity, and autocorrelation.
+  \item Problems 4--6: AR(1) mechanics, forecasting, and unit roots.
+  \item Problems 7--8: time-series regression, serial correlation, and distributed lags.
+\end{itemize}
+\end{block}
+
+\begin{alertblock}{Instruction}
+Attempt each problem before opening the solution. The goal is not only to compute, but to state the maintained assumptions clearly.
+\end{alertblock}
+\end{frame}
+
+% ============================================================
+\section{Questions}
+% ============================================================
+
+\begin{frame}{Problem 1: Basic time-series language}
+\label{q1}
+\small
+Let $\{Y_t:t=1,\ldots,T\}$ be a monthly time series for inflation.
+
+\begin{enumerate}[(a)]
+  \item What is the difference between a stochastic process and one observed time-series realization?
+  \item Define the lag operator $L$ and write $\Delta Y_t$ using $L$.
+  \item If $P_t$ is a price index, why is $\Delta \log P_t$ often interpreted as an inflation rate?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s1}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 2: Weak stationarity}
+\label{q2}
+\small
+Consider the process
+\[
+Y_t=\mu+\eps_t+0.5\eps_{t-1},
+\]
+where $\{\eps_t\}$ is white noise with $\E(\eps_t)=0$, $\Var(\eps_t)=\sigma^2$, and $\Cov(\eps_t,\eps_s)=0$ for $t\neq s$.
+
+\begin{enumerate}[(a)]
+  \item Compute $\E(Y_t)$.
+  \item Compute $\Var(Y_t)$.
+  \item Compute $\Cov(Y_t,Y_{t-1})$ and $\Cov(Y_t,Y_{t-2})$.
+  \item Is $Y_t$ weakly stationary? Explain.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s2}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 3: Reading autocorrelations}
+\label{q3}
+\small
+Suppose a researcher computes sample autocorrelations for three variables:
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Series & $\hat\rho_1$ & $\hat\rho_2$ & $\hat\rho_3$ \\
+\midrule
+A & 0.04 & -0.02 & 0.01 \\
+B & 0.78 & 0.60 & 0.47 \\
+C & 0.98 & 0.96 & 0.94 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}[(a)]
+  \item Which series looks closest to white noise?
+  \item Which series looks persistent but plausibly stationary?
+  \item Which series raises concern about a unit root or strong trend?
+  \item Why is an ACF pattern only a diagnostic, not a proof?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s3}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 4: AR(1) mean, variance, and ACF}
+\label{q4}
+\small
+Let
+\[
+Y_t=c+\phi Y_{t-1}+\eps_t,\qquad \eps_t\sim WN(0,\sigma^2),
+\]
+with $|\phi|<1$.
+
+\begin{enumerate}[(a)]
+  \item Derive the unconditional mean $\mu=\E(Y_t)$.
+  \item Derive the unconditional variance $\Var(Y_t)$.
+  \item Derive $\rho_h=\Corr(Y_t,Y_{t-h})$.
+  \item What happens to persistence as $\phi$ approaches one from below?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s4}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 5: AR(1) forecasting}
+\label{q5}
+\small
+Suppose quarterly inflation follows
+\[
+Y_t=1+0.6Y_{t-1}+\eps_t,
+\qquad \E(\eps_{t+h}\mid\calF_t)=0.
+\]
+At date $T$, the observed inflation rate is $Y_T=4$.
+
+\begin{enumerate}[(a)]
+  \item Compute the unconditional mean of $Y_t$.
+  \item Compute the one-step-ahead forecast $\widehat Y_{T+1|T}$.
+  \item Compute the two-step-ahead forecast $\widehat Y_{T+2|T}$.
+  \item Explain why the forecast converges to the unconditional mean as the horizon grows.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s5}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 6: Unit root versus trend stationarity}
+\label{q6}
+\small
+Consider two models:
+\[
+\text{A: } Y_t=\alpha+\delta t+u_t,\qquad u_t=\rho u_{t-1}+\eps_t,\quad |\rho|<1,
+\]
+\[
+\text{B: } Y_t=Y_{t-1}+g+\eps_t.
+\]
+
+\begin{enumerate}[(a)]
+  \item Which model is trend-stationary and which is difference-stationary?
+  \item For each model, what transformation would you use before fitting a stationary ARMA model?
+  \item What is the long-run effect of a one-time shock $\eps_t$ in each model?
+  \item Why can confusing A and B lead to misleading empirical conclusions?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s6}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 7: Serial correlation in a regression}
+\label{q7}
+\small
+Suppose the true time-series regression is
+\[
+Y_t=\beta_0+\beta_1X_t+u_t,
+\qquad
+u_t=\rho u_{t-1}+e_t,
+\]
+where $e_t$ is white noise and $|\rho|<1$.
+
+\begin{enumerate}[(a)]
+  \item If $\E(u_t\mid X_1,\ldots,X_T)=0$, is OLS for $\beta_1$ consistent?
+  \item If $\rho\neq 0$, are the usual homoskedastic OLS standard errors generally valid?
+  \item Name one standard way to conduct inference robust to serial correlation.
+  \item Explain the difference between inconsistency of $\hat\beta_1$ and invalid standard errors.
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s7}{\beamerbutton{Solution}}
+\end{frame}
+
+\begin{frame}{Problem 8: Distributed lags and long-run multipliers}
+\label{q8}
+\small
+Consider the autoregressive distributed lag model
+\[
+Y_t=\alpha+\lambda Y_{t-1}+\delta_0X_t+\delta_1X_{t-1}+u_t,
+\qquad |\lambda|<1.
+\]
+
+\begin{enumerate}[(a)]
+  \item What is the immediate effect of a one-unit increase in $X_t$ holding $Y_{t-1}$ fixed?
+  \item Derive the long-run multiplier of a permanent one-unit increase in $X$.
+  \item Compute the long-run multiplier when $\lambda=0.5$, $\delta_0=0.2$, and $\delta_1=0.1$.
+  \item Why is the long-run multiplier different from $\delta_0$?
+\end{enumerate}
+
+\vfill
+\hfill\hyperlink{s8}{\beamerbutton{Solution}}
+\end{frame}
+
+% ============================================================
+\appendix
+\section{Solutions}
+% ============================================================
+
+\begin{frame}{Solution 1: Basic time-series language}
+\label{s1}
+\small
+\begin{exampleblock}{Answer}
+\begin{enumerate}[(a)]
+  \item A stochastic process is the probabilistic sequence $\{Y_t\}$ that could generate many possible histories. A realization is the single path we observe in the data.
+  \item The lag operator satisfies $LY_t=Y_{t-1}$. Therefore
+  \[
+  \Delta Y_t=Y_t-Y_{t-1}=(1-L)Y_t.
+  \]
+  \item Since
+  \[
+  \Delta\log P_t=\log P_t-\log P_{t-1}
+  =\log(P_t/P_{t-1}),
+  \]
+  it is approximately the proportional growth rate of the price index. For small changes, it is close to $(P_t-P_{t-1})/P_{t-1}$.
+\end{enumerate}
+\end{exampleblock}
+\vfill
+\hfill\hyperlink{q1}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 2: Weak stationarity}
+\label{s2}
+\small
+\begin{exampleblock}{Moments}
+\[
+\E(Y_t)=\mu.
+\]
+Because $\eps_t$ and $\eps_{t-1}$ are uncorrelated,
+\[
+\Var(Y_t)=\Var(\eps_t+0.5\eps_{t-1})
+=\sigma^2+0.25\sigma^2=1.25\sigma^2.
+\]
+Next,
+\[
+\Cov(Y_t,Y_{t-1})
+=\Cov(\eps_t+0.5\eps_{t-1},\eps_{t-1}+0.5\eps_{t-2})
+=0.5\sigma^2.
+\]
+For lag two,
+\[
+\Cov(Y_t,Y_{t-2})=0.
+\]
+\end{exampleblock}
+
+\begin{block}{Conclusion}
+The mean is constant, the variance is constant, and autocovariances depend only on the lag. So this MA(1) process is weakly stationary.
+\end{block}
+\vfill
+\hfill\hyperlink{q2}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 3: Reading autocorrelations}
+\label{s3}
+\small
+\begin{exampleblock}{Classification}
+\begin{enumerate}[(a)]
+  \item Series A looks closest to white noise because its autocorrelations are near zero.
+  \item Series B looks persistent but plausibly stationary: the ACF is positive and decays.
+  \item Series C raises concern about a unit root or strong trend: the ACF stays very close to one and decays slowly.
+  \item The sample ACF is only a diagnostic because finite samples, structural breaks, deterministic trends, seasonality, and nonlinear dynamics can produce similar-looking patterns.
+\end{enumerate}
+\end{exampleblock}
+
+\begin{alertblock}{Econometric discipline}
+The ACF tells us what to investigate next; it is not a substitute for a maintained model, plots, transformations, and formal tests.
+\end{alertblock}
+\vfill
+\hfill\hyperlink{q3}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 4: AR(1) mean, variance, and ACF}
+\label{s4}
+\footnotesize
+\begin{exampleblock}{Mean}
+\[
+\mu=c+\phi\mu
+\quad\Rightarrow\quad
+\mu=\frac{c}{1-\phi}.
+\]
+\end{exampleblock}
+
+\begin{exampleblock}{Variance and autocorrelation}
+\[
+Y_t-\mu=\phi(Y_{t-1}-\mu)+\eps_t.
+\]
+\[
+\gamma_0=\phi^2\gamma_0+\sigma^2
+\quad\Rightarrow\quad
+\gamma_0=\frac{\sigma^2}{1-\phi^2}.
+\]
+For $h\geq 0$,
+\[
+\gamma_h=\phi^h\gamma_0,
+\qquad
+\rho_h=\frac{\gamma_h}{\gamma_0}=\phi^h.
+\]
+\end{exampleblock}
+
+\begin{block}{Interpretation}
+As $\phi\to 1^-$, shocks die out slowly and $\Var(Y_t)$ becomes large.
+\end{block}
+\vfill
+\hfill\hyperlink{q4}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 5: AR(1) forecasting}
+\label{s5}
+\small
+\begin{exampleblock}{Calculations}
+The unconditional mean is
+\[
+\mu=\frac{1}{1-0.6}=2.5.
+\]
+The one-step forecast is
+\[
+\widehat Y_{T+1|T}=1+0.6Y_T=1+0.6(4)=3.4.
+\]
+The two-step forecast is
+\[
+\widehat Y_{T+2|T}=1+0.6\widehat Y_{T+1|T}
+=1+0.6(3.4)=3.04.
+\]
+\end{exampleblock}
+
+\begin{block}{Mean reversion}
+In general,
+\[
+\widehat Y_{T+h|T}=\mu+0.6^h(Y_T-\mu).
+\]
+Since $0.6^h\to 0$, the forecast converges to $\mu=2.5$.
+\end{block}
+\vfill
+\hfill\hyperlink{q5}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 6: Unit root versus trend stationarity}
+\label{s6}
+\small
+\begin{exampleblock}{Classification and transformations}
+\begin{enumerate}[(a)]
+  \item Model A is trend-stationary: after removing $\alpha+\delta t$, the residual $u_t$ is stationary. Model B is difference-stationary: first differences satisfy $\Delta Y_t=g+\eps_t$.
+  \item For A, detrend by regressing on a constant and time trend, then model the residual. For B, first-difference the series.
+  \item In A, a one-time shock affects $u_t$ but dies out at rate $\rho^h$. In B, a one-time shock permanently shifts the level of $Y_t$.
+  \item If a unit-root process is incorrectly detrended, one may mistake permanent shocks for temporary cycles. If a trend-stationary process is incorrectly differenced, one may throw away useful long-run level information.
+\end{enumerate}
+\end{exampleblock}
+\vfill
+\hfill\hyperlink{q6}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 7: Serial correlation in a regression}
+\label{s7}
+\small
+\begin{exampleblock}{Answer}
+\begin{enumerate}[(a)]
+  \item Yes, under strict exogeneity $\E(u_t\mid X_1,\ldots,X_T)=0$ and standard regularity conditions, OLS is consistent even if $u_t$ is serially correlated.
+  \item No. Serial correlation generally invalidates the usual OLS standard errors because those formulas treat regression errors as uncorrelated across time.
+  \item Use heteroskedasticity-and-autocorrelation consistent standard errors, such as Newey--West, or explicitly model the serial correlation when the maintained assumptions justify it.
+  \item Inconsistency means $\hat\beta_1$ does not converge to $\beta_1$. Invalid standard errors mean the estimator may be centered correctly, but the reported uncertainty, $t$ statistics, and confidence intervals are wrong.
+\end{enumerate}
+\end{exampleblock}
+\vfill
+\hfill\hyperlink{q7}{\beamerbutton{Back}}
+\end{frame}
+
+\begin{frame}{Solution 8: Distributed lags and long-run multipliers}
+\label{s8}
+\small
+\begin{exampleblock}{Immediate and long-run effects}
+\begin{enumerate}[(a)]
+  \item Holding $Y_{t-1}$ fixed, the immediate effect of $X_t$ is $\delta_0$.
+  \item In a long-run steady state, set $Y_t=Y_{t-1}=Y$ and $X_t=X_{t-1}=X$:
+  \[
+  Y=\alpha+\lambda Y+(\delta_0+\delta_1)X.
+  \]
+  Hence
+  \[
+  \frac{\partial Y}{\partial X}
+  =\frac{\delta_0+\delta_1}{1-\lambda}.
+  \]
+  \item With $\lambda=0.5$, $\delta_0=0.2$, and $\delta_1=0.1$,
+  \[
+  \frac{0.2+0.1}{1-0.5}=0.6.
+  \]
+  \item The long-run multiplier includes the direct lag effect $\delta_1$ and the propagation through lagged $Y$ governed by $\lambda$.
+\end{enumerate}
+\end{exampleblock}
+\vfill
+\hfill\hyperlink{q8}{\beamerbutton{Back}}
+\end{frame}
+
+\end{document}
